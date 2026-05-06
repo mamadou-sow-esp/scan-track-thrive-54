@@ -42,7 +42,7 @@ function Landing() {
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.05] tracking-tight">
               Scanne.<br />
               Compte.<br />
-              <span className="text-gold italic">Maîtrise.</span>
+              <span className="text-gold">Maîtrise.</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-md leading-relaxed">
               Photographiez n'importe quel plat. Lexa identifie les ingrédients, estime les portions et calcule vos calories en un instant.
@@ -118,7 +118,7 @@ function Landing() {
             { quote: "L'app la plus élégante installée cette année.", name: "Léa M.", role: "Diététicienne" },
           ].map((t) => (
             <div key={t.name} className="card-premium p-6 space-y-4">
-              <p className="text-foreground/90 leading-relaxed font-display italic">"{t.quote}"</p>
+              <p className="text-foreground/90 leading-relaxed font-medium">"{t.quote}"</p>
               <div>
                 <div className="font-semibold text-sm">{t.name}</div>
                 <div className="text-xs text-muted-foreground">{t.role}</div>
@@ -134,7 +134,7 @@ function Landing() {
           <div className="absolute inset-0 bg-gold opacity-[0.04]" />
           <div className="relative space-y-6">
             <h2 className="font-display text-4xl sm:text-5xl font-semibold">
-              Prêt à <span className="text-gold italic">maîtriser</span> votre nutrition&nbsp;?
+              Prêt à <span className="text-gold">maîtriser</span> votre nutrition&nbsp;?
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
               Rejoignez des milliers d'utilisateurs qui suivent leurs calories sans effort.
