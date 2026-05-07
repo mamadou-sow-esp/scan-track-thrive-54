@@ -110,23 +110,43 @@ function Calendar() {
             if (!c.date) return <div key={i} />;
             const k = iso(c.date);
             const cal = scanned[k] ?? 0;
-            const pct = calGoal ? Math.min(100, (cal / calGoal) * 100) : 0;
-            const hasPlan = planned.some((p) => p.planned_date === k);
-            const isSel = k === selected;
+            const isPast = k < todayStr;
             const isToday = k === todayStr;
+            const isFutureDay = k > todayStr;
+            const isSel = k === selected;
+            const hasPlan = planned.some((p) => p.planned_date === k);
+
+            // Statut du jour
+            const accomplished = isPast && cal > 0 && cal >= calGoal * 0.8; // >=80% objectif = vert
+            const failed = isPast && (cal === 0 || cal < calGoal * 0.8);     // <80% = rouge
+            const inProgress = isToday;                                        // aujourd'hui = or/progression
+
+            // Couleur du cercle
+            let ringColor = "";
+            if (accomplished) ringColor = "ring-2 ring-[#4CAF50]";
+            else if (failed) ringColor = "ring-2 ring-[#E53935]";
+            else if (inProgress) ringColor = "ring-2 ring-gold";
+
+            // Couleur du texte intérieur
+            let textColor = "text-foreground";
+            if (accomplished) textColor = "text-[#4CAF50]";
+            else if (failed) textColor = "text-[#E53935]";
+            else if (inProgress) textColor = "text-gold";
+            if (isSel) textColor = "text-gold-foreground";
+
             return (
               <button key={i} onClick={() => setSelected(k)}
-                className={`relative aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition ${
-                  isSel ? "bg-gold text-gold-foreground" : isToday ? "bg-secondary text-foreground" : "hover:bg-secondary"
-                }`}>
-                <span className={`font-mono-data ${isSel ? "" : "text-foreground"}`}>{c.date.getDate()}</span>
-                {cal > 0 && !isSel && (
-                  <div className="absolute bottom-1 left-1 right-1 h-[3px] rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
-                  </div>
-                )}
-                {hasPlan && (
-                  <span className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${isSel ? "bg-gold-foreground" : "bg-gold"}`} />
+                className={`relative aspect-square rounded-full flex flex-col items-center justify-center text-xs transition
+                  ${isSel ? "bg-gold" : "hover:bg-secondary"}
+                  ${!isSel ? ringColor : ""}
+                `}>
+                <span className={`font-mono-data text-[11px] font-semibold ${isSel ? "text-gold-foreground" : textColor}`}>
+                  {c.date.getDate()}
+                </span>
+
+                {/* Point plan futur */}
+                {hasPlan && isFutureDay && (
+                  <span className={`absolute bottom-1 w-1 h-1 rounded-full ${isSel ? "bg-gold-foreground" : "bg-gold"}`} />
                 )}
               </button>
             );
