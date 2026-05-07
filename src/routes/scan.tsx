@@ -86,7 +86,7 @@ function ScanPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("meals").select("id, meal_name, calories, photo_url, scanned_at")
+    supabase.from("meals").select("id, meal_name, calories, proteins, carbs, fats, portion_g, notes, photo_url, scanned_at, ingredients")
       .eq("user_id", user.id).order("scanned_at", { ascending: false }).limit(10)
       .then(({ data }) => { if (data) setHistory(data as HistoryMeal[]); });
   }, [user, result]);
