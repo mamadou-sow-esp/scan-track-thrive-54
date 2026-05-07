@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_logs: {
+        Row: {
+          created_at: string
+          id: string
+          log_date: string
+          steps: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          log_date: string
+          steps?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          log_date?: string
+          steps?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meals: {
         Row: {
           calories: number
@@ -58,6 +85,48 @@ export type Database = {
           portion_g?: number | null
           proteins?: number
           scanned_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      planned_meals: {
+        Row: {
+          calories: number
+          carbs: number
+          created_at: string
+          fats: number
+          id: string
+          meal_name: string
+          meal_type: string | null
+          notes: string | null
+          planned_date: string
+          proteins: number
+          user_id: string
+        }
+        Insert: {
+          calories?: number
+          carbs?: number
+          created_at?: string
+          fats?: number
+          id?: string
+          meal_name: string
+          meal_type?: string | null
+          notes?: string | null
+          planned_date: string
+          proteins?: number
+          user_id: string
+        }
+        Update: {
+          calories?: number
+          carbs?: number
+          created_at?: string
+          fats?: number
+          id?: string
+          meal_name?: string
+          meal_type?: string | null
+          notes?: string | null
+          planned_date?: string
+          proteins?: number
           user_id?: string
         }
         Relationships: []
