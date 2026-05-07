@@ -3,30 +3,46 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { ChevronRight, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/history")({
   head: () => ({ meta: [{ title: "Lexa — Historique" }] }),
   component: () => <AppShell><History /></AppShell>,
 });
 
-interface Meal { id: string; meal_name: string; calories: number; photo_url: string | null; scanned_at: string; }
+interface Ingredient { name: string; quantity_g: number; calories: number; }
+interface Meal {
+  id: string; meal_name: string; calories: number; proteins: number;
+  carbs: number; fats: number; portion_g: number; notes: string | null;
+  photo_url: string | null; scanned_at: string;
+  ingredients: Ingredient[] | null;
+}
 
 function History() {
   const { user } = useAuth();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Meal | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     if (!user) return;
     supabase.from("meals").select("*").eq("user_id", user.id)
       .order("scanned_at", { ascending: false }).limit(200)
-      .then(({ data }) => {
-        if (data) setMeals(data as Meal[]);
-        setLoading(false);
-      });
-  }, [user]);
+      .then(({ data }) => { if (data) setMeals(data as Meal[]); setLoading(false); });
+  };
 
-  // Group by day
+  useEffect(() => { load(); }, [user]);
+
+  const deleteMeal = async (id: string) => {
+    setDeleting(true);
+    const { error } = await supabase.from("meals").delete().eq("id", id);
+    if (error) toast.error("Erreur lors de la suppression");
+    else { toast.success("Repas supprimé"); setSelected(null); load(); }
+    setDeleting(false);
+  };
+
   const groups = meals.reduce<Record<string, Meal[]>>((acc, m) => {
     const day = new Date(m.scanned_at).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
     (acc[day] = acc[day] || []).push(m);
@@ -34,7 +50,7 @@ function History() {
   }, {});
 
   return (
-    <div className="px-5 pt-8 space-y-6">
+    <div className="px-5 pt-8 space-y-6 pb-6">
       <header>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Journal</p>
         <h1 className="font-display text-3xl font-semibold mt-1">Historique</h1>
@@ -55,25 +71,129 @@ function History() {
               </div>
               <div className="space-y-2">
                 {list.map((m) => (
-                  <div key={m.id} className="card-premium p-3 flex items-center gap-3">
-                    {m.photo_url ? (
-                      <img src={m.photo_url} alt={m.meal_name} className="w-14 h-14 rounded-xl object-cover" />
-                    ) : (
-                      <div className="w-14 h-14 rounded-xl bg-secondary" />
-                    )}
+                  <button key={m.id} onClick={() => setSelected(m)}
+                    className="card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition">
+                    {m.photo_url
+                      ? <img src={m.photo_url} alt={m.meal_name} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                      : <div className="w-14 h-14 rounded-xl bg-secondary shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold truncate">{m.meal_name}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground mt-0.5">
                         {new Date(m.scanned_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                        {m.portion_g ? ` · ${m.portion_g}g` : ""}
+                      </div>
+                      {/* Mini macros */}
+                      <div className="flex gap-2 mt-1.5">
+                        <span className="text-[10px] font-mono-data" style={{ color: "var(--protein)" }}>P {Math.round(m.proteins)}g</span>
+                        <span className="text-[10px] font-mono-data" style={{ color: "var(--carb)" }}>G {Math.round(m.carbs)}g</span>
+                        <span className="text-[10px] font-mono-data" style={{ color: "var(--fat)" }}>L {Math.round(m.fats)}g</span>
                       </div>
                     </div>
-                    <div className="font-mono-data text-gold font-semibold">{m.calories}</div>
-                  </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-mono-data text-gold font-semibold">{m.calories}</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </button>
                 ))}
               </div>
             </section>
           );
         })
+      )}
+
+      {/* ── MODAL DÉTAIL ── */}
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && setSelected(null)}>
+          <div className="w-full max-w-md bg-card border border-border rounded-t-3xl max-h-[90vh] overflow-y-auto animate-fade-up">
+
+            {/* Photo header */}
+            <div className="relative aspect-video">
+              {selected.photo_url
+                ? <img src={selected.photo_url} alt={selected.meal_name} className="w-full h-full object-cover rounded-t-3xl" />
+                : <div className="w-full h-full bg-secondary rounded-t-3xl" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-3xl" />
+
+              {/* Fermer */}
+              <button onClick={() => setSelected(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                <X className="w-4 h-4 text-white" />
+              </button>
+
+              {/* Calories overlay */}
+              <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                <div>
+                  <div className="font-display text-5xl font-bold text-white">{selected.calories}</div>
+                  <div className="text-white/70 text-xs uppercase tracking-widest">kcal</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-white/80 text-sm font-semibold">{selected.meal_name}</div>
+                  {selected.portion_g > 0 && (
+                    <div className="text-white/60 text-[11px]">~{selected.portion_g}g</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {/* Date */}
+              <p className="text-xs text-muted-foreground capitalize">
+                {new Date(selected.scanned_at).toLocaleDateString("fr-FR", {
+                  weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"
+                })}
+              </p>
+
+              {/* Macros */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Protéines", value: selected.proteins, color: "var(--protein)" },
+                  { label: "Glucides", value: selected.carbs, color: "var(--carb)" },
+                  { label: "Lipides", value: selected.fats, color: "var(--fat)" },
+                ].map((m) => (
+                  <div key={m.label} className="bg-secondary rounded-xl p-3 text-center">
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{m.label}</div>
+                    <div className="font-mono-data text-lg font-semibold" style={{ color: m.color }}>
+                      {Math.round(m.value)}<span className="text-xs">g</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ingrédients */}
+              {selected.ingredients && selected.ingredients.length > 0 && (
+                <div>
+                  <h3 className="font-display text-base font-semibold mb-3">Ingrédients</h3>
+                  <div className="space-y-1">
+                    {selected.ingredients.map((ing, i) => (
+                      <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+                          <span>{ing.name}</span>
+                          <span className="text-muted-foreground font-mono-data text-xs">{ing.quantity_g}g</span>
+                        </div>
+                        <span className="font-mono-data text-gold text-xs shrink-0">{ing.calories} kcal</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selected.notes && (
+                <div className="bg-secondary rounded-xl p-3">
+                  <p className="text-xs text-muted-foreground">{selected.notes}</p>
+                </div>
+              )}
+
+              {/* Supprimer */}
+              <button onClick={() => deleteMeal(selected.id)} disabled={deleting}
+                className="w-full py-3 rounded-xl border border-destructive/40 text-destructive font-medium flex items-center justify-center gap-2 hover:bg-destructive/5 transition disabled:opacity-50">
+                <Trash2 className="w-4 h-4" />
+                {deleting ? "Suppression…" : "Supprimer ce repas"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
