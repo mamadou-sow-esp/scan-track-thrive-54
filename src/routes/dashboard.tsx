@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, Flame, Footprints, Target, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { stepsToKcal } from "@/lib/nutrition";
 import { toast } from "sonner";
+
+const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Lexa — Tableau de bord" }] }),
@@ -26,22 +28,38 @@ function Dashboard() {
   const [steps, setSteps] = useState<number>(0);
   const [stepsInput, setStepsInput] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [weekScanned, setWeekScanned] = useState<Record<string, number>>({});
 
   const load = async () => {
     if (!user) return;
     const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-    const [g, m, p, s] = await Promise.all([
+    // Semaine : lundi → dimanche
+    const today = new Date();
+    const dow = (today.getDay() + 6) % 7; // lundi = 0
+    const weekStart = new Date(today); weekStart.setDate(today.getDate() - dow); weekStart.setHours(0,0,0,0);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6); weekEnd.setHours(23,59,59,999);
+
+    const [g, m, p, s, wm] = await Promise.all([
       supabase.from("user_goals").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("meals").select("*").eq("user_id", user.id)
         .gte("scanned_at", startOfDay.toISOString())
         .order("scanned_at", { ascending: false }),
       supabase.from("profiles").select("name, weight_kg, target_weight_kg").eq("id", user.id).maybeSingle(),
       supabase.from("daily_logs").select("steps").eq("user_id", user.id).eq("log_date", todayISO()).maybeSingle(),
+      supabase.from("meals").select("calories, scanned_at").eq("user_id", user.id)
+        .gte("scanned_at", weekStart.toISOString()).lte("scanned_at", weekEnd.toISOString()),
     ]);
     if (g.data) setGoals(g.data as Goals);
     if (m.data) setMeals(m.data as Meal[]);
     if (p.data) setProfile(p.data as Profile);
     if (s.data) { setSteps(s.data.steps); setStepsInput(String(s.data.steps)); }
+    // Agréger calories par jour pour la semaine
+    const map: Record<string, number> = {};
+    (wm.data ?? []).forEach((row) => {
+      const d = (row.scanned_at as string).slice(0, 10);
+      map[d] = (map[d] ?? 0) + row.calories;
+    });
+    setWeekScanned(map);
     setLoading(false);
   };
 
@@ -81,6 +99,21 @@ function Dashboard() {
     return { start, target, diff };
   })();
 
+  // Semaine affichée (lun → dim)
+  const weekDays = useMemo(() => {
+    const today = new Date();
+    const dow = (today.getDay() + 6) % 7;
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today); d.setDate(today.getDate() - dow + i); return d;
+    });
+  }, []);
+
+  const todayStr = iso(new Date());
+  const stepGoal = 10000;
+  const stepsPct = Math.min(100, (steps / stepGoal) * 100);
+  const r = 40; const circ = 2 * Math.PI * r;
+  const dash = (stepsPct / 100) * circ;
+
   return (
     <div className="px-5 pt-8 space-y-6">
       <header className="flex items-center justify-between">
@@ -93,6 +126,34 @@ function Dashboard() {
           <span className="text-muted-foreground">{goalLabel}</span>
         </div>
       </header>
+
+      {/* Calendrier horizontal semaine */}
+      <div className="flex justify-between items-center gap-1">
+        {weekDays.map((d) => {
+          const k = iso(d);
+          const cal = weekScanned[k] ?? 0;
+          const isPast = k < todayStr;
+          const isToday = k === todayStr;
+          const accomplished = isPast && cal >= (goals?.daily_calories ?? 2000) * 0.8;
+          const failed = isPast && cal < (goals?.daily_calories ?? 2000) * 0.8;
+          const dayLabel = d.toLocaleDateString("fr-FR", { weekday: "short" }).slice(0, 1).toUpperCase();
+
+          let ringClass = "border-2 border-transparent";
+          let textClass = "text-muted-foreground";
+          if (accomplished) { ringClass = "border-2 border-[#4CAF50]"; textClass = "text-[#4CAF50]"; }
+          else if (failed) { ringClass = "border-2 border-[#E53935]"; textClass = "text-[#E53935]"; }
+          else if (isToday) { ringClass = "border-2 border-gold"; textClass = "text-gold"; }
+
+          return (
+            <div key={k} className="flex flex-col items-center gap-1">
+              <span className="text-[10px] text-muted-foreground uppercase">{dayLabel}</span>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${ringClass} ${isToday ? "bg-gold/10" : ""}`}>
+                <span className={`font-mono-data text-xs font-semibold ${textClass}`}>{d.getDate()}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {loading ? (
         <div className="card-premium p-8 text-center text-muted-foreground">Chargement…</div>
@@ -126,28 +187,40 @@ function Dashboard() {
             <MacroCard label="Lipides" value={totals.f} goal={goals?.daily_fats ?? 70} color="var(--fat)" />
           </div>
 
-          {/* Steps tracker */}
+          {/* Steps donut + saisie */}
           <div className="card-premium p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Footprints className="w-4 h-4 text-gold" />
-                <span className="text-sm text-muted-foreground">Activité du jour</span>
+            <div className="flex items-center gap-2 mb-4">
+              <Footprints className="w-4 h-4 text-gold" />
+              <span className="text-sm text-muted-foreground">Activité du jour</span>
+              <span className="ml-auto font-mono-data text-xs text-gold">{burned} kcal</span>
+            </div>
+            <div className="flex items-center gap-5">
+              {/* Donut SVG */}
+              <div className="relative w-24 h-24 shrink-0">
+                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                  <circle cx="50" cy="50" r={r} fill="none" stroke="var(--secondary)" strokeWidth="10" />
+                  <circle cx="50" cy="50" r={r} fill="none" stroke="#C9A84C" strokeWidth="10"
+                    strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
+                    style={{ transition: "stroke-dasharray 0.5s ease" }} />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="font-mono-data text-sm font-semibold text-gold">{steps.toLocaleString("fr-FR")}</span>
+                  <span className="text-[9px] text-muted-foreground">/ {stepGoal.toLocaleString("fr-FR")}</span>
+                </div>
               </div>
-              <span className="font-mono-data text-xs text-gold">{burned} kcal</span>
+              {/* Input */}
+              <div className="flex-1 space-y-2">
+                <input type="number" inputMode="numeric" min={0}
+                  value={stepsInput} onChange={(e) => setStepsInput(e.target.value)}
+                  placeholder="Nombre de pas"
+                  className="w-full px-3 py-2.5 rounded-lg bg-input border border-border focus:border-gold outline-none transition font-mono-data text-sm"
+                />
+                <button onClick={saveSteps}
+                  className="w-full py-2 rounded-lg bg-gold text-gold-foreground font-semibold text-sm">
+                  Enregistrer
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="number" inputMode="numeric" min={0}
-                value={stepsInput} onChange={(e) => setStepsInput(e.target.value)}
-                placeholder="Nombre de pas"
-                className="flex-1 px-3 py-2.5 rounded-lg bg-input border border-border focus:border-gold outline-none transition font-mono-data"
-              />
-              <button onClick={saveSteps}
-                className="px-4 py-2.5 rounded-lg bg-gold text-gold-foreground font-semibold text-sm">
-                Enregistrer
-              </button>
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-2">Estimation auto : {steps.toLocaleString("fr-FR")} pas aujourd'hui</p>
           </div>
 
           {/* Weight progress */}
