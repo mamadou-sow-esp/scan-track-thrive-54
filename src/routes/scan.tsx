@@ -66,25 +66,14 @@ function ScanPage() {
   const [selectedMeal, setSelectedMeal] = useState<HistoryMeal | null>(null);
   const [scanLine, setScanLine] = useState(0);
 
-  // Bloquer le scroll quand le modal est ouvert (compatible mobile)
+  // Bloquer le scroll quand le modal est ouvert
   useEffect(() => {
     if (selectedMeal) {
-      const scrollY = window.scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
+      document.documentElement.style.overflow = "hidden";
     } else {
-      const top = document.body.style.top;
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      if (top) window.scrollTo(0, -parseInt(top));
+      document.documentElement.style.overflow = "";
     }
-    return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-    };
+    return () => { document.documentElement.style.overflow = ""; };
   }, [selectedMeal]);
 
   // Bloquer scroll body quand modal ouvert
