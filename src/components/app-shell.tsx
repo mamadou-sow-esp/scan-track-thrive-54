@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { Home, Camera, Clock, User } from "lucide-react";
+import { Home, Camera, CalendarDays, Sparkles, User } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -18,8 +18,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const tabs = [
     { to: "/dashboard", icon: Home, label: "Accueil" },
+    { to: "/calendar", icon: CalendarDays, label: "Agenda" },
     { to: "/scan", icon: Camera, label: "Scanner" },
-    { to: "/history", icon: Clock, label: "Historique" },
+    { to: "/suggestions", icon: Sparkles, label: "Idées" },
     { to: "/profile", icon: User, label: "Profil" },
   ] as const;
 
@@ -34,7 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={t.to}
                 to={t.to}
-                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition ${
+                className={`flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg transition ${
                   active ? "text-gold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
