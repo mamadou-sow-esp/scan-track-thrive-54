@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImagePlus, Loader2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/calendar")({
@@ -22,6 +22,9 @@ function Calendar() {
   const [planned, setPlanned] = useState<Array<{ id: string; planned_date: string; meal_name: string; meal_type: string | null; calories: number; }>>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: "", type: "dejeuner", calories: "", proteins: "", carbs: "", fats: "" });
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const monthStart = useMemo(() => new Date(cursor.getFullYear(), cursor.getMonth(), 1), [cursor]);
   const monthEnd = useMemo(() => new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0), [cursor]);
@@ -66,7 +69,75 @@ function Calendar() {
   const dayPlanned = planned.filter((p) => p.planned_date === selected);
   const dayScanned = scanned[selected] ?? 0;
 
-  const addPlanned = async () => {
+  const scanImage = async (file: File) => {
+    setScanning(true);
+    try {
+      // Convertir en base64
+      const base64 = await new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res((r.result as string).split(",")[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: { type: "base64", media_type: file.type as "image/jpeg" | "image/png" | "image/webp", data: base64 }
+              },
+              {
+                type: "text",
+                text: `Tu es Lexa, un nutritionniste IA expert. Analyse cette photo de plat alimentaire.
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans backticks :
+{"meal_name":"Nom du plat","calories":520,"proteins":28,"carbs":45,"fats":22}`
+              }
+            ]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content?.[0]?.text ?? "";
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+
+      setForm(f => ({
+        ...f,
+        name: parsed.meal_name ?? f.name,
+        calories: String(parsed.calories ?? ""),
+        proteins: String(parsed.proteins ?? ""),
+        carbs: String(parsed.carbs ?? ""),
+        fats: String(parsed.fats ?? ""),
+      }));
+      toast.success("Plat analysé par Lexa ✨");
+    } catch {
+      toast.error("Impossible d'analyser l'image");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoPreview(URL.createObjectURL(file));
+    scanImage(file);
+  };
+
+  const resetModal = () => {
+    setShowAdd(false);
+    setPhotoPreview(null);
+    setScanning(false);
+    setForm({ name: "", type: "dejeuner", calories: "", proteins: "", carbs: "", fats: "" });
+  };
     if (!user || !form.name) return;
     const { error } = await supabase.from("planned_meals").insert({
       user_id: user.id, planned_date: selected,
@@ -77,7 +148,7 @@ function Calendar() {
       fats: Number(form.fats) || 0,
     });
     if (error) toast.error(error.message);
-    else { toast.success("Repas planifié"); setShowAdd(false); setForm({ name: "", type: "dejeuner", calories: "", proteins: "", carbs: "", fats: "" }); load(); }
+    else { toast.success("Repas planifié"); resetModal(); load(); }
   };
 
   const removePlanned = async (id: string) => {
@@ -201,10 +272,41 @@ function Calendar() {
           <div className="card-premium p-6 w-full max-w-md space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-lg font-semibold">Planifier un repas</h3>
-              <button onClick={() => setShowAdd(false)}><X className="w-5 h-5" /></button>
+              <button onClick={resetModal}><X className="w-5 h-5" /></button>
             </div>
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nom du plat"
+
+            {/* Zone upload photo */}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+            <button onClick={() => fileRef.current?.click()}
+              className="w-full rounded-xl border-2 border-dashed border-border hover:border-gold transition overflow-hidden"
+              disabled={scanning}>
+              {photoPreview ? (
+                <div className="relative">
+                  <img src={photoPreview} alt="plat" className="w-full h-40 object-cover" />
+                  {scanning && (
+                    <div className="absolute inset-0 bg-background/70 flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="w-6 h-6 text-gold animate-spin" />
+                      <span className="text-xs text-gold font-semibold">Lexa analyse ton plat…</span>
+                    </div>
+                  )}
+                  {!scanning && (
+                    <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-background/80 text-[10px] text-gold font-semibold">
+                      ✨ Analysé
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-6 text-muted-foreground">
+                  <ImagePlus className="w-7 h-7" />
+                  <span className="text-xs">Ajouter une photo — Lexa remplit les données</span>
+                </div>
+              )}
+            </button>
+
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Nom du plat"
               className="w-full px-3 py-2.5 rounded-lg bg-input border border-border focus:border-gold outline-none" />
+
             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
               className="w-full px-3 py-2.5 rounded-lg bg-input border border-border focus:border-gold outline-none">
               <option value="petit-dej">Petit-déjeuner</option>
@@ -212,16 +314,21 @@ function Calendar() {
               <option value="diner">Dîner</option>
               <option value="collation">Collation</option>
             </select>
+
             <div className="grid grid-cols-4 gap-2">
-              {(["calories","proteins","carbs","fats"] as const).map((k) => (
-                <input key={k} type="number" value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })}
-                  placeholder={k === "calories" ? "kcal" : `${k.slice(0,4)} g`}
-                  className="px-2 py-2 rounded-lg bg-input border border-border focus:border-gold outline-none font-mono-data text-sm" />
+              {(["calories", "proteins", "carbs", "fats"] as const).map((k) => (
+                <div key={k} className="relative">
+                  <input type="number" value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                    placeholder={k === "calories" ? "kcal" : `${k.slice(0, 4)} g`}
+                    className={`w-full px-2 py-2 rounded-lg bg-input border focus:border-gold outline-none font-mono-data text-sm transition
+                      ${form[k] && !scanning ? "border-gold/50 text-gold" : "border-border"}`} />
+                </div>
               ))}
             </div>
-            <button onClick={addPlanned} disabled={!form.name}
+
+            <button onClick={addPlanned} disabled={!form.name || scanning}
               className="w-full py-3 rounded-xl bg-gold text-gold-foreground font-semibold disabled:opacity-50">
-              Ajouter au calendrier
+              {scanning ? "Analyse en cours…" : "Ajouter au calendrier"}
             </button>
           </div>
         </div>
