@@ -159,7 +159,7 @@ function History() {
             </div>
 
             {/* Contenu scrollable */}
-            <div className="overflow-y-auto overscroll-contain flex-1 p-5 space-y-5">
+            <div className="overflow-y-auto overscroll-contain flex-1 p-5 space-y-5 pb-8">
               <p className="text-xs text-muted-foreground capitalize">
                 {new Date(selected.scanned_at).toLocaleDateString("fr-FR", {
                   weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"

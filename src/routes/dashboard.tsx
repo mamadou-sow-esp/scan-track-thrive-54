@@ -367,7 +367,7 @@ function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="overflow-y-auto overscroll-contain flex-1 p-5 space-y-4">
+                <div className="overflow-y-auto overscroll-contain flex-1 p-5 space-y-4 pb-8">
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { label: "Protéines", value: selectedMeal.proteins, color: "var(--protein)" },
