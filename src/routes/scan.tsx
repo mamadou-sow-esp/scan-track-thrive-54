@@ -17,7 +17,12 @@ interface ScanResult {
   ingredients: { name: string; quantity_g: number; calories: number }[];
   confidence: string; notes?: string;
 }
-interface HistoryMeal { id: string; meal_name: string; calories: number; photo_url: string | null; scanned_at: string; }
+interface HistoryMeal {
+  id: string; meal_name: string; calories: number; proteins: number;
+  carbs: number; fats: number; portion_g: number; notes: string | null;
+  photo_url: string | null; scanned_at: string;
+  ingredients: { name: string; quantity_g: number; calories: number }[] | null;
+}
 
 type PageState = "camera" | "preview" | "scanning" | "result";
 
@@ -32,6 +37,7 @@ function ScanPage() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<HistoryMeal[]>([]);
+  const [selectedMeal, setSelectedMeal] = useState<HistoryMeal | null>(null);
   const [scanLine, setScanLine] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -195,13 +201,13 @@ function ScanPage() {
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Récents</p>
               <div className="flex gap-3 overflow-x-auto pb-1">
                 {history.map((m) => (
-                  <div key={m.id} className="shrink-0 w-20">
+                  <button key={m.id} onClick={() => setSelectedMeal(m)} className="shrink-0 w-20 text-left">
                     {m.photo_url
-                      ? <img src={m.photo_url} alt={m.meal_name} className="w-20 h-20 rounded-xl object-cover border border-border" />
+                      ? <img src={m.photo_url} alt={m.meal_name} className="w-20 h-20 rounded-xl object-cover border border-border hover:border-gold transition" />
                       : <div className="w-20 h-20 rounded-xl bg-secondary border border-border" />}
                     <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.meal_name}</p>
                     <p className="text-[10px] font-mono-data text-gold">{m.calories} kcal</p>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -339,22 +345,99 @@ function ScanPage() {
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Récemment scannés</p>
               <div className="space-y-2">
                 {history.slice(0, 5).map((m) => (
-                  <div key={m.id} className="card-premium p-3 flex items-center gap-3">
+                  <button key={m.id} onClick={() => setSelectedMeal(m)}
+                    className="card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition">
                     {m.photo_url
-                      ? <img src={m.photo_url} alt={m.meal_name} className="w-12 h-12 rounded-xl object-cover" />
-                      : <div className="w-12 h-12 rounded-xl bg-secondary" />}
+                      ? <img src={m.photo_url} alt={m.meal_name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                      : <div className="w-12 h-12 rounded-xl bg-secondary shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm truncate">{m.meal_name}</div>
                       <div className="text-[11px] text-muted-foreground">
                         {new Date(m.scanned_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
                       </div>
                     </div>
-                    <span className="font-mono-data text-gold text-sm">{m.calories}</span>
-                  </div>
+                    <span className="font-mono-data text-gold text-sm shrink-0">{m.calories}</span>
+                  </button>
                 ))}
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── MODAL DÉTAIL HISTORIQUE ── */}
+      {selectedMeal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && setSelectedMeal(null)}>
+          <div className="w-full max-w-md bg-card border border-border rounded-t-3xl max-h-[90vh] overflow-y-auto animate-fade-up">
+            <div className="relative aspect-video">
+              {selectedMeal.photo_url
+                ? <img src={selectedMeal.photo_url} alt={selectedMeal.meal_name} className="w-full h-full object-cover rounded-t-3xl" />
+                : <div className="w-full h-full bg-secondary rounded-t-3xl" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-3xl" />
+              <button onClick={() => setSelectedMeal(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                <X className="w-4 h-4 text-white" />
+              </button>
+              <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                <div>
+                  <div className="font-display text-5xl font-bold text-white">{selectedMeal.calories}</div>
+                  <div className="text-white/70 text-xs uppercase tracking-widest">kcal</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-white/80 text-sm font-semibold">{selectedMeal.meal_name}</div>
+                  {selectedMeal.portion_g > 0 && <div className="text-white/60 text-[11px]">~{selectedMeal.portion_g}g</div>}
+                </div>
+              </div>
+            </div>
+            <div className="p-5 space-y-5">
+              <p className="text-xs text-muted-foreground capitalize">
+                {new Date(selectedMeal.scanned_at).toLocaleDateString("fr-FR", {
+                  weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"
+                })}
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Protéines", value: selectedMeal.proteins, color: "var(--protein)" },
+                  { label: "Glucides", value: selectedMeal.carbs, color: "var(--carb)" },
+                  { label: "Lipides", value: selectedMeal.fats, color: "var(--fat)" },
+                ].map((macro) => (
+                  <div key={macro.label} className="bg-secondary rounded-xl p-3 text-center">
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{macro.label}</div>
+                    <div className="font-mono-data text-lg font-semibold" style={{ color: macro.color }}>
+                      {Math.round(macro.value)}<span className="text-xs">g</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {selectedMeal.ingredients && selectedMeal.ingredients.length > 0 && (
+                <div>
+                  <h3 className="font-display text-base font-semibold mb-3">Ingrédients</h3>
+                  <div className="space-y-1">
+                    {selectedMeal.ingredients.map((ing, i) => (
+                      <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+                          <span>{ing.name}</span>
+                          <span className="text-muted-foreground font-mono-data text-xs">{ing.quantity_g}g</span>
+                        </div>
+                        <span className="font-mono-data text-gold text-xs shrink-0">{ing.calories} kcal</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {selectedMeal.notes && (
+                <div className="bg-secondary rounded-xl p-3">
+                  <p className="text-xs text-muted-foreground">{selectedMeal.notes}</p>
+                </div>
+              )}
+              <button onClick={() => setSelectedMeal(null)}
+                className="w-full py-3 rounded-xl bg-gold text-gold-foreground font-semibold">
+                Fermer
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
