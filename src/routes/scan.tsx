@@ -66,6 +66,23 @@ function ScanPage() {
   const [selectedMeal, setSelectedMeal] = useState<HistoryMeal | null>(null);
   const [scanLine, setScanLine] = useState(0);
 
+  // Bloquer le scroll du body quand le modal est ouvert
+  useEffect(() => {
+    if (selectedMeal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [selectedMeal]);
+
+  // Bloquer scroll body quand modal ouvert
+  useEffect(() => {
+    if (selectedMeal) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [selectedMeal]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -403,10 +420,18 @@ function ScanPage() {
 
       {/* ── MODAL DÉTAIL HISTORIQUE ── */}
       {selectedMeal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
-          onClick={(e) => e.target === e.currentTarget && setSelectedMeal(null)}>
-          <div className="w-full max-w-md bg-card border border-border rounded-t-3xl max-h-[90vh] overflow-y-auto animate-fade-up">
-            <div className="relative aspect-video">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
+          onClick={() => setSelectedMeal(null)}
+          style={{ touchAction: "none" }}
+        >
+          <div
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-fade-up flex flex-col"
+            style={{ maxHeight: "90dvh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Photo fixe — ne scrolle pas */}
+            <div className="relative aspect-video shrink-0">
               {selectedMeal.photo_url
                 ? <img src={selectedMeal.photo_url} alt={selectedMeal.meal_name} className="w-full h-full object-cover rounded-t-3xl" />
                 : <div className="w-full h-full bg-secondary rounded-t-3xl" />}
@@ -426,7 +451,9 @@ function ScanPage() {
                 </div>
               </div>
             </div>
-            <div className="p-5 space-y-5">
+
+            {/* Contenu scrollable isolé */}
+            <div className="overflow-y-auto overscroll-contain flex-1 p-5 space-y-5">
               <p className="text-xs text-muted-foreground capitalize">
                 {new Date(selectedMeal.scanned_at).toLocaleDateString("fr-FR", {
                   weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"
@@ -472,6 +499,7 @@ function ScanPage() {
                 className="w-full py-3 rounded-xl bg-gold text-gold-foreground font-semibold">
                 Fermer
               </button>
+              <div className="h-2" />
             </div>
           </div>
         </div>
