@@ -72,54 +72,33 @@ function Calendar() {
   const scanImage = async (file: File) => {
     setScanning(true);
     try {
-      // Convertir en base64
-      const base64 = await new Promise<string>((res, rej) => {
+      // Convertir en base64 data URL (comme le scanner)
+      const dataUrl = await new Promise<string>((res, rej) => {
         const r = new FileReader();
-        r.onload = () => res((r.result as string).split(",")[1]);
+        r.onload = () => res(r.result as string);
         r.onerror = rej;
         r.readAsDataURL(file);
       });
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: file.type as "image/jpeg" | "image/png" | "image/webp", data: base64 }
-              },
-              {
-                type: "text",
-                text: `Tu es Lexa, un nutritionniste IA expert. Analyse cette photo de plat alimentaire.
-Réponds UNIQUEMENT en JSON valide, sans markdown, sans backticks :
-{"meal_name":"Nom du plat","calories":520,"proteins":28,"carbs":45,"fats":22}`
-              }
-            ]
-          }]
-        })
+      const { data, error } = await supabase.functions.invoke("scan-meal", {
+        body: { image: dataUrl },
       });
 
-      const data = await response.json();
-      const text = data.content?.[0]?.text ?? "";
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
+      if (error) throw error;
+      if (!data?.result) throw new Error("Aucune analyse retournée");
 
+      const result = data.result;
       setForm(f => ({
         ...f,
-        name: parsed.meal_name ?? f.name,
-        calories: String(parsed.calories ?? ""),
-        proteins: String(parsed.proteins ?? ""),
-        carbs: String(parsed.carbs ?? ""),
-        fats: String(parsed.fats ?? ""),
+        name: result.meal_name ?? f.name,
+        calories: String(result.calories ?? ""),
+        proteins: String(result.proteins ?? ""),
+        carbs: String(result.carbs ?? ""),
+        fats: String(result.fats ?? ""),
       }));
       toast.success("Plat analysé par Lexa ✨");
-    } catch {
-      toast.error("Impossible d'analyser l'image");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Impossible d'analyser l'image");
     } finally {
       setScanning(false);
     }
