@@ -33,9 +33,23 @@ function Dashboard() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   useEffect(() => {
-    if (selectedMeal) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
-    return () => { document.body.style.overflow = ""; };
+    if (selectedMeal) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+    } else {
+      const top = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      if (top) window.scrollTo(0, -parseInt(top));
+    }
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
   }, [selectedMeal]);
 
   const load = async () => {

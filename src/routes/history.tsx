@@ -26,14 +26,25 @@ function History() {
   const [selected, setSelected] = useState<Meal | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Bloquer le scroll du body quand le modal est ouvert
+  // Bloquer le scroll quand le modal est ouvert (compatible mobile)
   useEffect(() => {
     if (selected) {
-      document.body.style.overflow = "hidden";
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
     } else {
-      document.body.style.overflow = "";
+      const top = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      if (top) window.scrollTo(0, -parseInt(top));
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
   }, [selected]);
 
   const load = () => {
