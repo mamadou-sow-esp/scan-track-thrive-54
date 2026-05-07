@@ -26,6 +26,16 @@ function History() {
   const [selected, setSelected] = useState<Meal | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Bloquer le scroll du body quand le modal est ouvert
+  useEffect(() => {
+    if (selected) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [selected]);
+
   const load = () => {
     if (!user) return;
     supabase.from("meals").select("*").eq("user_id", user.id)
@@ -103,24 +113,26 @@ function History() {
 
       {/* ── MODAL DÉTAIL ── */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
-          onClick={(e) => e.target === e.currentTarget && setSelected(null)}>
-          <div className="w-full max-w-md bg-card border border-border rounded-t-3xl max-h-[90vh] overflow-y-auto animate-fade-up">
-
-            {/* Photo header */}
-            <div className="relative aspect-video">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && setSelected(null)}
+          style={{ touchAction: "none" }}
+        >
+          <div
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-fade-up flex flex-col"
+            style={{ maxHeight: "90dvh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Photo header — fixe, ne scrolle pas */}
+            <div className="relative aspect-video shrink-0">
               {selected.photo_url
                 ? <img src={selected.photo_url} alt={selected.meal_name} className="w-full h-full object-cover rounded-t-3xl" />
                 : <div className="w-full h-full bg-secondary rounded-t-3xl" />}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-3xl" />
-
-              {/* Fermer */}
               <button onClick={() => setSelected(null)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
                 <X className="w-4 h-4 text-white" />
               </button>
-
-              {/* Calories overlay */}
               <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                 <div>
                   <div className="font-display text-5xl font-bold text-white">{selected.calories}</div>
@@ -135,15 +147,14 @@ function History() {
               </div>
             </div>
 
-            <div className="p-5 space-y-5">
-              {/* Date */}
+            {/* Contenu scrollable */}
+            <div className="overflow-y-auto overscroll-contain flex-1 p-5 space-y-5">
               <p className="text-xs text-muted-foreground capitalize">
                 {new Date(selected.scanned_at).toLocaleDateString("fr-FR", {
                   weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"
                 })}
               </p>
 
-              {/* Macros */}
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "Protéines", value: selected.proteins, color: "var(--protein)" },
@@ -159,7 +170,6 @@ function History() {
                 ))}
               </div>
 
-              {/* Ingrédients */}
               {selected.ingredients && selected.ingredients.length > 0 && (
                 <div>
                   <h3 className="font-display text-base font-semibold mb-3">Ingrédients</h3>
@@ -178,19 +188,20 @@ function History() {
                 </div>
               )}
 
-              {/* Notes */}
               {selected.notes && (
                 <div className="bg-secondary rounded-xl p-3">
                   <p className="text-xs text-muted-foreground">{selected.notes}</p>
                 </div>
               )}
 
-              {/* Supprimer */}
               <button onClick={() => deleteMeal(selected.id)} disabled={deleting}
                 className="w-full py-3 rounded-xl border border-destructive/40 text-destructive font-medium flex items-center justify-center gap-2 hover:bg-destructive/5 transition disabled:opacity-50">
                 <Trash2 className="w-4 h-4" />
                 {deleting ? "Suppression…" : "Supprimer ce repas"}
               </button>
+
+              {/* Espace pour la safe area iOS */}
+              <div className="h-2" />
             </div>
           </div>
         </div>
