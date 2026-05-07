@@ -26,15 +26,41 @@ interface HistoryMeal {
 
 type PageState = "camera" | "preview" | "scanning" | "result";
 
+const SCAN_KEY = "lexa_scan_state";
+
+function saveScanSession(data: {
+  state: PageState; preview: string | null; imageBase64: string | null; result: ScanResult | null;
+}) {
+  try { sessionStorage.setItem(SCAN_KEY, JSON.stringify(data)); } catch {}
+}
+
+function loadScanSession(): { state: PageState; preview: string | null; imageBase64: string | null; result: ScanResult | null; } | null {
+  try {
+    const raw = sessionStorage.getItem(SCAN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Ne pas restaurer l'état caméra (flux vidéo perdu)
+    if (parsed.state === "camera") return null;
+    return parsed;
+  } catch { return null; }
+}
+
+function clearScanSession() {
+  try { sessionStorage.removeItem(SCAN_KEY); } catch {}
+}
+
 function ScanPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [state, setState] = useState<PageState>("camera");
+  // Restaurer session précédente si elle existe
+  const saved = loadScanSession();
+
+  const [state, setState] = useState<PageState>(saved?.state ?? "camera");
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
-  const [preview, setPreview] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [result, setResult] = useState<ScanResult | null>(null);
+  const [preview, setPreview] = useState<string | null>(saved?.preview ?? null);
+  const [imageBase64, setImageBase64] = useState<string | null>(saved?.imageBase64 ?? null);
+  const [result, setResult] = useState<ScanResult | null>(saved?.result ?? null);
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<HistoryMeal[]>([]);
   const [selectedMeal, setSelectedMeal] = useState<HistoryMeal | null>(null);
@@ -45,6 +71,12 @@ function ScanPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scanAnimRef = useRef<number | null>(null);
+
+  // Auto-save session à chaque changement
+  useEffect(() => {
+    if (state === "camera") return; // pas besoin de sauver l'état caméra
+    saveScanSession({ state, preview, imageBase64, result });
+  }, [state, preview, imageBase64, result]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -142,13 +174,18 @@ function ScanPage() {
       });
       if (error) throw error;
       toast.success("Repas ajouté à ton journal ✨");
+      clearScanSession();
       navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erreur d'enregistrement");
     } finally { setSaving(false); }
   };
 
-  const reset = () => { setPreview(null); setImageBase64(null); setResult(null); setState("camera"); };
+  const reset = () => {
+    setPreview(null); setImageBase64(null); setResult(null);
+    clearScanSession();
+    setState("camera");
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -163,7 +200,6 @@ function ScanPage() {
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Scanner</p>
             <h1 className="font-display text-3xl font-semibold mt-1">Analyse ton plat</h1>
           </div>
-
           <div className="mx-5 rounded-2xl overflow-hidden relative bg-black aspect-square">
             <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
             {[
