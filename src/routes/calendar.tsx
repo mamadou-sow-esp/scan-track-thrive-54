@@ -138,6 +138,8 @@ Réponds UNIQUEMENT en JSON valide, sans markdown, sans backticks :
     setScanning(false);
     setForm({ name: "", type: "dejeuner", calories: "", proteins: "", carbs: "", fats: "" });
   };
+
+  const addPlanned = async () => {
     if (!user || !form.name) return;
     const { error } = await supabase.from("planned_meals").insert({
       user_id: user.id, planned_date: selected,
