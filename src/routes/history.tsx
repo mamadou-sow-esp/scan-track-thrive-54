@@ -91,9 +91,9 @@ function History() {
                 <span className="font-mono-data text-sm text-gold">{total} kcal</span>
               </div>
               <div className="space-y-2">
-                {list.map((m) => (
+                {list.map((m, idx) => (
                   <button key={m.id} onClick={() => setSelected(m)}
-                    className="card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition">
+                    className={`card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition btn-press animate-fade-up stagger-${Math.min(idx + 1, 6)}`}>
                     {m.photo_url
                       ? <img src={m.photo_url} alt={m.meal_name} className="w-14 h-14 rounded-xl object-cover shrink-0" />
                       : <div className="w-14 h-14 rounded-xl bg-secondary shrink-0" />}
@@ -130,7 +130,7 @@ function History() {
           style={{ touchAction: "none" }}
         >
           <div
-            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-fade-up flex flex-col"
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-spring-up flex flex-col"
             style={{ maxHeight: "90dvh" }}
             onClick={(e) => e.stopPropagation()}
           >

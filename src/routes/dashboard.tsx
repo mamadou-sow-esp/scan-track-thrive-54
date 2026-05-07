@@ -138,20 +138,21 @@ function Dashboard() {
 
   return (
     <div className="px-5 pt-8 space-y-6">
-      <header className="flex items-center justify-between">
+      {/* Header animé */}
+      <header className="flex items-center justify-between animate-slide-down">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Aujourd'hui</p>
           <h1 className="font-display text-3xl font-semibold mt-1">Bonjour{profile?.name ? `, ${profile.name}` : ""}</h1>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-xs">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-xs btn-press">
           <GoalIcon className="w-3.5 h-3.5 text-gold" />
           <span className="text-muted-foreground">{goalLabel}</span>
         </div>
       </header>
 
-      {/* Calendrier horizontal semaine */}
+      {/* Calendrier horizontal avec stagger */}
       <div className="flex justify-between items-center gap-1">
-        {weekDays.map((d) => {
+        {weekDays.map((d, idx) => {
           const k = iso(d);
           const cal = weekScanned[k] ?? 0;
           const isPast = k < todayStr;
@@ -167,10 +168,10 @@ function Dashboard() {
           else if (isToday) { ringClass = "border-2 border-gold"; textClass = "text-gold"; }
 
           return (
-            <div key={k} className="flex flex-col items-center gap-1">
+            <div key={k} className={`flex flex-col items-center gap-1 animate-fade-up stagger-${Math.min(idx + 1, 6)}`}>
               <span className="text-[10px] text-muted-foreground uppercase">{dayLabel}</span>
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${ringClass} ${isToday ? "bg-gold/10" : ""}`}>
-                <span className={`font-mono-data text-xs font-semibold ${textClass}`}>{d.getDate()}</span>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-200 active:scale-90 ${ringClass} ${isToday ? "bg-gold/10" : ""}`}>
+                <span className={`text-xs font-semibold ${textClass}`}>{d.getDate()}</span>
               </div>
             </div>
           );
@@ -178,67 +179,74 @@ function Dashboard() {
       </div>
 
       {loading ? (
-        <div className="card-premium p-8 text-center text-muted-foreground">Chargement…</div>
+        /* Skeleton loading animé */
+        <div className="space-y-4">
+          {[1,2,3].map(i => (
+            <div key={i} className={`card-premium h-24 animate-shimmer stagger-${i}`} />
+          ))}
+        </div>
       ) : (
         <>
           {/* Calories */}
-          <div className="card-premium p-6">
+          <div className="card-premium p-6 animate-fade-up stagger-1">
             <div className="flex items-baseline justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-gold" />
+                <Flame className="w-4 h-4 text-gold animate-float" />
                 <span className="text-sm text-muted-foreground">Calories</span>
               </div>
-              <span className="font-mono-data text-xs text-muted-foreground">{totals.cal} / {calGoal} kcal</span>
+              <span className="text-xs text-muted-foreground">{totals.cal} / {calGoal} kcal</span>
             </div>
-            <div className="font-display text-5xl font-semibold text-gold mb-1">
+            <div className="font-display text-5xl font-semibold text-gold mb-1 animate-count-up">
               {netRemaining}
               <span className="text-base text-muted-foreground font-sans ml-2">restantes</span>
             </div>
             {burned > 0 && (
-              <p className="text-xs text-muted-foreground mb-4 font-mono-data">+ {burned} kcal brûlées via activité</p>
+              <p className="text-xs text-muted-foreground mb-4 animate-fade-in">+ {burned} kcal brûlées via activité</p>
             )}
             <div className="h-2 rounded-full bg-secondary overflow-hidden mt-3">
-              <div className="h-full bg-gold transition-all duration-500" style={{ width: `${calPct}%` }} />
+              <div className="h-full bg-gold rounded-full"
+                style={{
+                  width: `${calPct}%`,
+                  transition: "width 1.2s cubic-bezier(.22,.68,0,1.2)",
+                }} />
             </div>
           </div>
 
           {/* Macros */}
           <div className="grid grid-cols-3 gap-3">
-            <MacroCard label="Protéines" value={totals.p} goal={goals?.daily_proteins ?? 100} color="var(--protein)" />
-            <MacroCard label="Glucides" value={totals.c} goal={goals?.daily_carbs ?? 250} color="var(--carb)" />
-            <MacroCard label="Lipides" value={totals.f} goal={goals?.daily_fats ?? 70} color="var(--fat)" />
+            <MacroCard label="Protéines" value={totals.p} goal={goals?.daily_proteins ?? 100} color="var(--protein)" delay="0.1s" />
+            <MacroCard label="Glucides" value={totals.c} goal={goals?.daily_carbs ?? 250} color="var(--carb)" delay="0.15s" />
+            <MacroCard label="Lipides" value={totals.f} goal={goals?.daily_fats ?? 70} color="var(--fat)" delay="0.2s" />
           </div>
 
           {/* Steps donut + saisie */}
-          <div className="card-premium p-5">
+          <div className="card-premium p-5 animate-fade-up stagger-3">
             <div className="flex items-center gap-2 mb-4">
               <Footprints className="w-4 h-4 text-gold" />
               <span className="text-sm text-muted-foreground">Activité du jour</span>
-              <span className="ml-auto font-mono-data text-xs text-gold">{burned} kcal</span>
+              <span className="ml-auto text-xs text-gold">{burned} kcal</span>
             </div>
             <div className="flex items-center gap-5">
-              {/* Donut SVG */}
               <div className="relative w-24 h-24 shrink-0">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                   <circle cx="50" cy="50" r={r} fill="none" stroke="var(--secondary)" strokeWidth="10" />
                   <circle cx="50" cy="50" r={r} fill="none" stroke="#C9A84C" strokeWidth="10"
                     strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
-                    style={{ transition: "stroke-dasharray 0.5s ease" }} />
+                    style={{ transition: "stroke-dasharray 1.2s cubic-bezier(.22,.68,0,1.2)" }} />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="font-mono-data text-sm font-semibold text-gold">{steps.toLocaleString("fr-FR")}</span>
+                  <span className="text-sm font-semibold text-gold">{steps.toLocaleString("fr-FR")}</span>
                   <span className="text-[9px] text-muted-foreground">/ {stepGoal.toLocaleString("fr-FR")}</span>
                 </div>
               </div>
-              {/* Input */}
               <div className="flex-1 space-y-2">
                 <input type="number" inputMode="numeric" min={0}
                   value={stepsInput} onChange={(e) => setStepsInput(e.target.value)}
                   placeholder="Nombre de pas"
-                  className="w-full px-3 py-2.5 rounded-lg bg-input border border-border focus:border-gold outline-none transition font-mono-data text-sm"
+                  className="w-full px-3 py-2.5 rounded-lg bg-input border border-border focus:border-gold outline-none transition-all duration-200 text-sm"
                 />
                 <button onClick={saveSteps}
-                  className="w-full py-2 rounded-lg bg-gold text-gold-foreground font-semibold text-sm">
+                  className="w-full py-2 rounded-lg bg-gold text-gold-foreground font-semibold text-sm btn-press">
                   Enregistrer
                 </button>
               </div>
@@ -264,7 +272,7 @@ function Dashboard() {
           )}
 
           <Link to="/scan"
-            className="flex items-center justify-center gap-3 w-full py-5 rounded-2xl bg-gold text-gold-foreground font-semibold shadow-gold hover:opacity-90 transition">
+            className="flex items-center justify-center gap-3 w-full py-5 rounded-2xl bg-gold text-gold-foreground font-semibold shadow-gold hover:opacity-90 transition btn-press animate-pulse-gold">
             <Camera className="w-5 h-5" strokeWidth={2} />
             Scanner mon repas
           </Link>
@@ -277,25 +285,23 @@ function Dashboard() {
               )}
             </div>
             {meals.length === 0 ? (
-              <div className="card-premium p-8 text-center space-y-2">
-                <div className="text-3xl">🍽️</div>
+              <div className="card-premium p-8 text-center space-y-2 animate-scale-in">
+                <div className="text-3xl animate-float">🍽️</div>
                 <p className="text-muted-foreground text-sm">Aucun repas scanné aujourd'hui.</p>
                 <p className="text-xs text-muted-foreground">Scanner ton premier repas pour commencer !</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {meals.map((m) => (
+                {meals.map((m, idx) => (
                   <button key={m.id} onClick={() => setSelectedMeal(m)}
-                    className="card-premium w-full text-left overflow-hidden hover:border-gold/40 transition group">
+                    className={`card-premium w-full text-left overflow-hidden hover:border-gold/40 transition group btn-press animate-fade-up stagger-${Math.min(idx + 1, 6)}`}>
                     <div className="flex">
-                      {/* Photo grande */}
                       {m.photo_url ? (
                         <img src={m.photo_url} alt={m.meal_name}
-                          className="w-24 h-24 object-cover shrink-0 group-hover:scale-105 transition-transform duration-300" />
+                          className="w-24 h-24 object-cover shrink-0 group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="w-24 h-24 bg-secondary shrink-0 flex items-center justify-center text-2xl">🍽️</div>
                       )}
-                      {/* Infos */}
                       <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
                         <div>
                           <div className="font-semibold text-sm leading-tight truncate">{m.meal_name}</div>
@@ -303,7 +309,6 @@ function Dashboard() {
                             {new Date(m.scanned_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                           </div>
                         </div>
-                        {/* Macros mini */}
                         <div className="flex gap-2 mt-2">
                           <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary" style={{ color: "var(--protein)" }}>
                             P {Math.round(m.proteins)}g
@@ -412,16 +417,24 @@ function Dashboard() {
   );
 }
 
-function MacroCard({ label, value, goal, color }: { label: string; value: number; goal: number; color: string }) {
+function MacroCard({ label, value, goal, color, delay = "0s" }: { label: string; value: number; goal: number; color: string; delay?: string }) {
   const pct = Math.min(100, (value / goal) * 100);
   return (
-    <div className="card-premium p-4">
+    <div className="card-premium p-4 animate-fade-up" style={{ animationDelay: delay }}>
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{label}</div>
-      <div className="font-mono-data text-xl font-semibold">{Math.round(value)}<span className="text-xs text-muted-foreground">g</span></div>
-      <div className="h-1 rounded-full bg-secondary overflow-hidden mt-3">
-        <div className="h-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+      <div className="text-xl font-semibold animate-count-up" style={{ animationDelay: delay }}>
+        {Math.round(value)}<span className="text-xs text-muted-foreground">g</span>
       </div>
-      <div className="text-[10px] text-muted-foreground mt-1.5 font-mono-data">/ {goal}g</div>
+      <div className="h-1 rounded-full bg-secondary overflow-hidden mt-3">
+        <div className="h-full rounded-full"
+          style={{
+            width: `${pct}%`,
+            backgroundColor: color,
+            transition: "width 1.2s cubic-bezier(.22,.68,0,1.2)",
+            transitionDelay: delay,
+          }} />
+      </div>
+      <div className="text-[10px] text-muted-foreground mt-1.5">/ {goal}g</div>
     </div>
   );
 }

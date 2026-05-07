@@ -247,15 +247,15 @@ function ScanPage() {
 
           <div className="px-5 py-5 flex items-center justify-between gap-4">
             <button onClick={() => fileRef.current?.click()}
-              className="w-14 h-14 rounded-2xl border border-border flex items-center justify-center hover:border-gold transition">
+              className="w-14 h-14 rounded-2xl border border-border flex items-center justify-center hover:border-gold transition btn-press">
               <ImagePlus className="w-5 h-5 text-muted-foreground" />
             </button>
             <button onClick={capture}
-              className="w-20 h-20 rounded-full bg-gold shadow-gold flex items-center justify-center hover:opacity-90 transition active:scale-95">
+              className="w-20 h-20 rounded-full bg-gold shadow-gold flex items-center justify-center hover:opacity-90 transition btn-press animate-pulse-gold">
               <Camera className="w-8 h-8 text-gold-foreground" />
             </button>
             <button onClick={() => setFacingMode(f => f === "environment" ? "user" : "environment")}
-              className="w-14 h-14 rounded-2xl border border-border flex items-center justify-center hover:border-gold transition">
+              className="w-14 h-14 rounded-2xl border border-border flex items-center justify-center hover:border-gold transition btn-press">
               <FlipHorizontal className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
@@ -336,8 +336,7 @@ function ScanPage() {
 
       {/* ── RÉSULTAT ── */}
       {state === "result" && result && (
-        <div className="flex flex-col flex-1 px-5 pt-8 space-y-4 pb-6 overflow-y-auto animate-fade-up">
-          <div className="flex items-center justify-between">
+        <div className="flex flex-col flex-1 px-5 pt-8 space-y-4 pb-6 overflow-y-auto animate-fade-up">          <div className="flex items-center justify-between">
             <h1 className="font-display text-2xl font-semibold">{result.meal_name}</h1>
             <button onClick={reset} className="p-2 rounded-xl border border-border"><X className="w-4 h-4" /></button>
           </div>
@@ -364,10 +363,10 @@ function ScanPage() {
               { label: "Protéines", value: result.proteins, color: "var(--protein)" },
               { label: "Glucides", value: result.carbs, color: "var(--carb)" },
               { label: "Lipides", value: result.fats, color: "var(--fat)" },
-            ].map((m) => (
-              <div key={m.label} className="card-premium p-4 text-center">
+            ].map((m, i) => (
+              <div key={m.label} className={`card-premium p-4 text-center animate-spring-scale stagger-${i + 1}`}>
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{m.label}</div>
-                <div className="font-mono-data text-xl font-semibold" style={{ color: m.color }}>
+                <div className="text-xl font-semibold" style={{ color: m.color }}>
                   {Math.round(m.value)}<span className="text-xs">g</span>
                 </div>
               </div>
@@ -437,7 +436,7 @@ function ScanPage() {
           style={{ touchAction: "none" }}
         >
           <div
-            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-fade-up flex flex-col"
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-spring-up flex flex-col"
             style={{ maxHeight: "90dvh" }}
             onClick={(e) => e.stopPropagation()}
           >
