@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -37,9 +37,9 @@
   --color-success: var(--success);
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
-  --font-display: 'Inter', sans-serif;
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 :root {
@@ -146,7 +146,11 @@
 
 @layer utilities {
   .font-display { font-family: var(--font-display); }
-  .font-mono-data { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
+  .font-mono-data { 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+  }
   .text-gold { color: var(--gold); }
   .bg-gold { background-color: var(--gold); }
   .gradient-gold { background-image: var(--gradient-gold); }
