@@ -141,6 +141,7 @@ export type Database = {
           id: string
           name: string | null
           sex: string | null
+          target_weight_kg: number | null
           updated_at: string
           weight_kg: number | null
         }
@@ -153,6 +154,7 @@ export type Database = {
           id: string
           name?: string | null
           sex?: string | null
+          target_weight_kg?: number | null
           updated_at?: string
           weight_kg?: number | null
         }
@@ -165,6 +167,7 @@ export type Database = {
           id?: string
           name?: string | null
           sex?: string | null
+          target_weight_kg?: number | null
           updated_at?: string
           weight_kg?: number | null
         }
