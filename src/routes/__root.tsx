@@ -101,10 +101,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
+  // Script inline pour appliquer le thème avant le premier rendu (évite le flash)
+  const themeScript = `
+    (function() {
+      var t = localStorage.getItem('lexa-theme');
+      if (t === 'light') document.documentElement.classList.add('theme-light');
+    })();
+  `;
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
         {children}

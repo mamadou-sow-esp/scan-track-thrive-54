@@ -4,9 +4,29 @@ import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Sparkles, TrendingDown, Minus, TrendingUp, Clock } from "lucide-react";
+import { LogOut, Moon, Sparkles, Sun, TrendingDown, Minus, TrendingUp, Clock } from "lucide-react";
 import { calcTargets, type Sex, type Activity, type GoalType } from "@/lib/nutrition";
 import { Link } from "@tanstack/react-router";
+
+// ── Theme hook ──────────────────────────────────────────────
+function useTheme() {
+  const [theme, setThemeState] = useState<"dark" | "light">(() => {
+    return (localStorage.getItem("lexa-theme") as "dark" | "light") ?? "dark";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "light") {
+      root.classList.add("theme-light");
+    } else {
+      root.classList.remove("theme-light");
+    }
+    localStorage.setItem("lexa-theme", theme);
+  }, [theme]);
+
+  const toggle = () => setThemeState(t => t === "dark" ? "light" : "dark");
+  return { theme, toggle };
+}
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Lexa — Profil" }] }),
@@ -16,6 +36,7 @@ export const Route = createFileRoute("/profile")({
 function Profile() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
   const [name, setName] = useState("");
   const [weight, setWeight] = useState("");
   const [target, setTarget] = useState("");
@@ -115,6 +136,39 @@ function Profile() {
         <h1 className="font-display text-3xl font-semibold mt-1">Profil</h1>
         <p className="text-sm text-muted-foreground mt-1">{user?.email}</p>
       </header>
+
+      <section className="card-premium p-6">
+        <h2 className="font-display text-lg font-semibold mb-4">Apparence</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {theme === "dark" ? <Moon className="w-4 h-4 text-gold" /> : <Sun className="w-4 h-4 text-gold" />}
+            <div>
+              <p className="text-sm font-semibold">{theme === "dark" ? "Mode sombre" : "Mode clair"}</p>
+              <p className="text-[11px] text-muted-foreground">{theme === "dark" ? "Thème noir élégant" : "Thème blanc premium"}</p>
+            </div>
+          </div>
+          <button onClick={toggle}
+            className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${theme === "light" ? "bg-gold" : "bg-secondary border border-border"}`}>
+            <span className={`absolute top-1 w-5 h-5 rounded-full shadow transition-all duration-300 ${
+              theme === "light" ? "left-8 bg-white" : "left-1 bg-gold"
+            }`} />
+          </button>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button onClick={() => theme !== "dark" && toggle()}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-semibold transition ${
+              theme === "dark" ? "border-gold bg-gold/10 text-gold" : "border-border text-muted-foreground hover:border-foreground"
+            }`}>
+            <Moon className="w-3.5 h-3.5" /> Sombre
+          </button>
+          <button onClick={() => theme !== "light" && toggle()}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-semibold transition ${
+              theme === "light" ? "border-gold bg-gold/10 text-gold" : "border-border text-muted-foreground hover:border-foreground"
+            }`}>
+            <Sun className="w-3.5 h-3.5" /> Clair
+          </button>
+        </div>
+      </section>
 
       <section className="card-premium p-6 space-y-4">
         <h2 className="font-display text-lg font-semibold">Informations</h2>
