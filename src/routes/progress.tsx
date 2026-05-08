@@ -93,7 +93,7 @@ function ProgressPage() {
   ];
 
   return (
-    <div className="px-5 pt-6 space-y-6 pb-8">
+    <div className="px-5 pt-6 space-y-6 pb-8 animate-fade-up">
       <header>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Statistiques</p>
         <h1 className="font-display text-3xl font-semibold mt-1">Progrès</h1>

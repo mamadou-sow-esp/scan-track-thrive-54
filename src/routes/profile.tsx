@@ -130,7 +130,7 @@ function Profile() {
   ];
 
   return (
-    <div className="px-5 pt-8 space-y-6">
+    <div className="px-5 pt-8 space-y-6 animate-fade-up">
       <header>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Compte</p>
         <h1 className="font-display text-3xl font-semibold mt-1">Profil</h1>

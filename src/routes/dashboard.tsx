@@ -167,7 +167,7 @@ function Dashboard() {
   const dash = (stepsPct / 100) * circ;
 
   return (
-    <div className="px-5 pt-8 space-y-6">
+    <div className="px-5 pt-8 space-y-6 animate-fade-up">
       {/* Header animé */}
       <header className="flex items-center justify-between ">
         <div>
@@ -378,7 +378,7 @@ function Dashboard() {
           {selectedMeal && (
             <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
               onClick={() => setSelectedMeal(null)} style={{ touchAction: "none" }}>
-              <div className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-fade-up flex flex-col"
+              <div className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal-up flex flex-col"
                 style={{ maxHeight: "90dvh" }} onClick={(e) => e.stopPropagation()}>
                 <div className="relative shrink-0" style={{ height: "220px" }}>
                   {selectedMeal.photo_url
