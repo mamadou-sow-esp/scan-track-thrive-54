@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Home, Camera, CalendarDays, BarChart2, User, ChevronLeft } from "lucide-react";
 
@@ -14,14 +14,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  // Garder le dernier état connu pour éviter le flash
+  const wasAuthed = useRef(false);
+  if (user) wasAuthed.current = true;
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
 
-  if (loading || !user) {
+  // Si on était connecté et loading repasse à true, ne pas afficher le spinner
+  if (loading && !wasAuthed.current) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Chargement…</div>;
   }
+  if (!user && !wasAuthed.current) return null;
 
   const tabs = [
     { to: "/dashboard", icon: Home, label: "Accueil" },
@@ -36,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen max-w-md mx-auto" style={{ paddingBottom: "80px" }}>
       {backRoute && (
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50 animate-slide-down">
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
           <div className="max-w-md mx-auto flex items-center px-4 py-3 gap-2">
             <Link to={backRoute.to}
               className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition btn-press">
@@ -70,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg transition btn-press ${
                   active ? "text-gold" : "text-muted-foreground hover:text-foreground"
                 }`}>
-                <t.icon className={`w-5 h-5 transition-transform duration-200 ${active ? "scale-110" : ""}`} strokeWidth={active ? 2 : 1.75} />
+                <t.icon className={`w-5 h-5 ${active ? "scale-110" : ""}`} strokeWidth={active ? 2 : 1.75} />
                 <span className="text-[10px] font-medium tracking-wide">{t.label}</span>
               </Link>
             );
