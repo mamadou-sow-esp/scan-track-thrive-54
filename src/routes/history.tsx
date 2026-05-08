@@ -144,22 +144,22 @@ function History() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Photo header — fixe, ne scrolle pas */}
-            <div className="relative aspect-video shrink-0">
+            <div className="relative shrink-0" style={{ height: "220px" }}>
               {selected.photo_url
                 ? <img src={selected.photo_url} alt={selected.meal_name} loading="lazy" decoding="async" className="w-full h-full object-cover rounded-t-3xl" />
                 : <div className="w-full h-full bg-secondary rounded-t-3xl" />}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-3xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-t-3xl" />
               <button onClick={() => setSelected(null)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
                 <X className="w-4 h-4 text-white" />
               </button>
               <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                 <div>
-                  <div className="font-display text-5xl font-bold text-white">{selected.calories}</div>
-                  <div className="text-white/70 text-xs uppercase tracking-widest">kcal</div>
+                  <div className="font-display text-4xl font-bold text-white leading-none">{selected.calories}</div>
+                  <div className="text-white/70 text-xs uppercase tracking-widest mt-0.5">kcal</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-white/80 text-sm font-semibold">{selected.meal_name}</div>
+                  <div className="text-white/90 text-sm font-semibold max-w-[160px] text-right">{selected.meal_name}</div>
                   {selected.portion_g > 0 && (
                     <div className="text-white/60 text-[11px]">~{selected.portion_g}g</div>
                   )}

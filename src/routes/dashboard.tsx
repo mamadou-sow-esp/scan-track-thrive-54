@@ -380,7 +380,7 @@ function Dashboard() {
               onClick={() => setSelectedMeal(null)} style={{ touchAction: "none" }}>
               <div className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-fade-up flex flex-col"
                 style={{ maxHeight: "90dvh" }} onClick={(e) => e.stopPropagation()}>
-                <div className="relative aspect-video shrink-0">
+                <div className="relative shrink-0" style={{ height: "220px" }}>
                   {selectedMeal.photo_url
                     ? <img src={selectedMeal.photo_url} alt={selectedMeal.meal_name} loading="lazy" decoding="async" className="w-full h-full object-cover rounded-t-3xl" />
                     : <div className="w-full h-full bg-secondary rounded-t-3xl flex items-center justify-center text-4xl">🍽️</div>}
