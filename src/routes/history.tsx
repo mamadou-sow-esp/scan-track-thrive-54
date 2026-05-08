@@ -80,7 +80,7 @@ function History() {
   }, {});
 
   return (
-    <div className="px-5 pt-8 space-y-6 pb-6 animate-fade-up">
+    <div className="px-5 pt-8 space-y-6 pb-6 animate-page">
       <header>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Journal</p>
         <h1 className="font-display text-3xl font-semibold mt-1">Historique</h1>
@@ -102,7 +102,7 @@ function History() {
               <div className="space-y-2">
                 {list.map((m, idx) => (
                   <button key={m.id} onClick={() => setSelected(m)}
-                    className={`card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition btn-press animate-fade-up stagger-${Math.min(idx + 1, 6)}`}>
+                    className={`card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition btn-press animate-card card-hover animate-fade-up stagger-${Math.min(idx + 1, 6)}`}>
                     {m.photo_url
                       ? <img src={m.photo_url} alt={m.meal_name} loading="lazy" decoding="async" className="w-14 h-14 rounded-xl object-cover shrink-0" />
                       : <div className="w-14 h-14 rounded-xl bg-secondary shrink-0" />}
@@ -139,7 +139,7 @@ function History() {
           style={{ touchAction: "none" }}
         >
           <div
-            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal-up flex flex-col"
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal flex flex-col"
             style={{ maxHeight: "90dvh" }}
             onClick={(e) => e.stopPropagation()}
           >

@@ -271,7 +271,7 @@ function ScanPage() {
 
       {/* ── PREVIEW ── */}
       {state === "preview" && preview && (
-        <div className="flex flex-col flex-1 px-5 pt-8 space-y-4 animate-fade-up">
+        <div className="flex flex-col flex-1 px-5 pt-8 space-y-4 animate-page">
           <div className="flex items-center justify-between">
             <h1 className="font-display text-2xl font-semibold">Vérifier la photo</h1>
             <button onClick={reset} className="p-2 rounded-xl border border-border"><X className="w-4 h-4" /></button>
@@ -294,7 +294,7 @@ function ScanPage() {
 
       {/* ── SCANNING ── */}
       {state === "scanning" && preview && (
-        <div className="flex flex-col flex-1 px-5 pt-8 space-y-4 animate-fade-up">
+        <div className="flex flex-col flex-1 px-5 pt-8 space-y-4 animate-page">
           <h1 className="font-display text-2xl font-semibold">Analyse en cours…</h1>
           <div className="rounded-2xl overflow-hidden aspect-square relative">
             <img src={preview} alt="Plat" className="w-full h-full object-cover" />
@@ -426,7 +426,7 @@ function ScanPage() {
           style={{ touchAction: "none" }}
         >
           <div
-            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal-up flex flex-col"
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal flex flex-col"
             style={{ maxHeight: "90dvh" }}
             onClick={(e) => e.stopPropagation()}
           >

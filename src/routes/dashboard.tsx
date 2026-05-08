@@ -167,7 +167,7 @@ function Dashboard() {
   const dash = (stepsPct / 100) * circ;
 
   return (
-    <div className="px-5 pt-8 space-y-6 animate-fade-up">
+    <div className="px-5 pt-8 space-y-6 animate-page">
       {/* Header animé */}
       <header className="flex items-center justify-between ">
         <div>
@@ -218,7 +218,7 @@ function Dashboard() {
       ) : (
         <>
           {/* Calories */}
-          <div className="card-premium p-6 animate-fade-up">
+          <div className="card-premium p-6 animate-card">
             <div className="flex items-baseline justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-gold animate-float" />
@@ -226,7 +226,7 @@ function Dashboard() {
               </div>
               <span className="text-xs text-muted-foreground">{totals.cal} / {calGoal} kcal</span>
             </div>
-            <div className="font-display text-5xl font-semibold text-gold mb-1 ">
+            <div className="font-display text-5xl font-semibold text-gold mb-1 animate-number ">
               {netRemaining}
               <span className="text-base text-muted-foreground font-sans ml-2">restantes</span>
             </div>
@@ -234,11 +234,8 @@ function Dashboard() {
               <p className="text-xs text-muted-foreground mb-4 animate-fade-in">+ {burned} kcal brûlées via activité</p>
             )}
             <div className="h-2 rounded-full bg-secondary overflow-hidden mt-3">
-              <div className="h-full bg-gold rounded-full"
-                style={{
-                  width: `${calPct}%`,
-                  transition: "width 0.8s ease",
-                }} />
+              <div className="h-full bg-gold rounded-full bar-fill"
+                style={{ width: `${calPct}%` }} />
             </div>
           </div>
 
@@ -250,7 +247,7 @@ function Dashboard() {
           </div>
 
           {/* Steps donut + saisie */}
-          <div className="card-premium p-5 animate-fade-up">
+          <div className="card-premium p-5 animate-card">
             <div className="flex items-center gap-2 mb-4">
               <Footprints className="w-4 h-4 text-gold" />
               <span className="text-sm text-muted-foreground">Activité du jour</span>
@@ -262,7 +259,7 @@ function Dashboard() {
                   <circle cx="50" cy="50" r={r} fill="none" stroke="var(--secondary)" strokeWidth="10" />
                   <circle cx="50" cy="50" r={r} fill="none" stroke="#C9A84C" strokeWidth="10"
                     strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
-                    style={{ transition: "stroke-dasharray 0.8s ease" }} />
+                    className="stroke-fill" />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-sm font-semibold text-gold">{steps.toLocaleString("fr-FR")}</span>
@@ -378,7 +375,7 @@ function Dashboard() {
           {selectedMeal && (
             <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
               onClick={() => setSelectedMeal(null)} style={{ touchAction: "none" }}>
-              <div className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal-up flex flex-col"
+              <div className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal flex flex-col"
                 style={{ maxHeight: "90dvh" }} onClick={(e) => e.stopPropagation()}>
                 <div className="relative shrink-0" style={{ height: "220px" }}>
                   {selectedMeal.photo_url
@@ -450,17 +447,16 @@ function Dashboard() {
 function MacroCard({ label, value, goal, color, delay = "0s" }: { label: string; value: number; goal: number; color: string; delay?: string }) {
   const pct = Math.min(100, (value / goal) * 100);
   return (
-    <div className="card-premium p-4 animate-fade-up" style={{ animationDelay: delay }}>
+    <div className="card-premium p-4 animate-card" style={{ animationDelay: delay }}>
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{label}</div>
-      <div className="text-xl font-semibold " style={{ animationDelay: delay }}>
+      <div className="text-xl font-semibold animate-number" style={{ animationDelay: delay }}>
         {Math.round(value)}<span className="text-xs text-muted-foreground">g</span>
       </div>
       <div className="h-1 rounded-full bg-secondary overflow-hidden mt-3">
-        <div className="h-full rounded-full"
+        <div className="h-full rounded-full bar-fill"
           style={{
             width: `${pct}%`,
             backgroundColor: color,
-            transition: "width 0.8s ease",
             transitionDelay: delay,
           }} />
       </div>
