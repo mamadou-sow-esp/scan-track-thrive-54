@@ -255,3 +255,32 @@
 .page-enter {
   animation: fade-up 0.4s cubic-bezier(.22,.68,0,1.2) both;
 }
+
+/* Désactiver les animations continues coûteuses - performances mobile */
+.animate-pulse-gold { animation: none; box-shadow: var(--shadow-gold); }
+.animate-float { animation: none; }
+.animate-shimmer {
+  background: var(--secondary);
+  animation: shimmer 2s infinite;
+  will-change: background-position;
+}
+
+/* Activer les animations continues seulement sur desktop performant */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .animate-pulse-gold { animation: pulse-gold 2s ease-out infinite; }
+  .animate-float { animation: float 3s ease-in-out infinite; }
+}
+
+/* Désactiver toutes les animations si l'utilisateur le préfère */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* GPU acceleration sur les éléments animés */
+.animate-fade-up, .animate-spring-up, .animate-spring-scale,
+.animate-slide-down, .animate-scale-in, .animate-count-up {
+  will-change: transform, opacity;
+}

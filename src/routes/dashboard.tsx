@@ -21,6 +21,27 @@ interface Meal { id: string; meal_name: string; calories: number; proteins: numb
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+const CACHE_KEY = "lexa_dashboard_v1";
+const CACHE_TTL = 60 * 1000; // 1 minute
+
+function getCache() {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) { sessionStorage.removeItem(CACHE_KEY); return null; }
+    return data;
+  } catch { return null; }
+}
+
+function setCache(data: unknown) {
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+}
+
+function invalidateCache() {
+  try { sessionStorage.removeItem(CACHE_KEY); } catch {}
+}
+
 function Dashboard() {
   const { user } = useAuth();
   const [goals, setGoals] = useState<Goals | null>(null);
@@ -41,37 +62,57 @@ function Dashboard() {
     return () => { document.documentElement.style.overflow = ""; };
   }, [selectedMeal]);
 
-  const load = async () => {
+  const load = async (forceRefresh = false) => {
     if (!user) return;
+
+    // Charger depuis le cache d'abord (affichage instantané)
+    if (!forceRefresh) {
+      const cached = getCache();
+      if (cached) {
+        setGoals(cached.goals); setMeals(cached.meals);
+        setProfile(cached.profile); setSteps(cached.steps);
+        setStepsInput(String(cached.steps)); setWeekScanned(cached.weekScanned);
+        setLoading(false);
+        return;
+      }
+    }
+
     const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-    // Semaine : lundi → dimanche
     const today = new Date();
-    const dow = (today.getDay() + 6) % 7; // lundi = 0
+    const dow = (today.getDay() + 6) % 7;
     const weekStart = new Date(today); weekStart.setDate(today.getDate() - dow); weekStart.setHours(0,0,0,0);
     const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6); weekEnd.setHours(23,59,59,999);
 
     const [g, m, p, s, wm] = await Promise.all([
       supabase.from("user_goals").select("*").eq("user_id", user.id).maybeSingle(),
-      supabase.from("meals").select("*").eq("user_id", user.id)
-        .gte("scanned_at", startOfDay.toISOString())
+      supabase.from("meals").select("id, meal_name, calories, proteins, carbs, fats, photo_url, scanned_at, ingredients, portion_g")
+        .eq("user_id", user.id).gte("scanned_at", startOfDay.toISOString())
         .order("scanned_at", { ascending: false }),
       supabase.from("profiles").select("name, weight_kg, target_weight_kg").eq("id", user.id).maybeSingle(),
       supabase.from("daily_logs").select("steps").eq("user_id", user.id).eq("log_date", todayISO()).maybeSingle(),
       supabase.from("meals").select("calories, scanned_at").eq("user_id", user.id)
         .gte("scanned_at", weekStart.toISOString()).lte("scanned_at", weekEnd.toISOString()),
     ]);
-    if (g.data) setGoals(g.data as Goals);
-    if (m.data) setMeals(m.data as Meal[]);
-    if (p.data) setProfile(p.data as Profile);
-    if (s.data) { setSteps(s.data.steps); setStepsInput(String(s.data.steps)); }
-    // Agréger calories par jour pour la semaine
+
+    const goalsData = g.data as Goals | null;
+    const mealsData = (m.data ?? []) as Meal[];
+    const profileData = p.data as Profile | null;
+    const stepsData = s.data?.steps ?? 0;
     const map: Record<string, number> = {};
     (wm.data ?? []).forEach((row) => {
       const d = (row.scanned_at as string).slice(0, 10);
       map[d] = (map[d] ?? 0) + row.calories;
     });
+
+    if (goalsData) setGoals(goalsData);
+    setMeals(mealsData);
+    if (profileData) setProfile(profileData);
+    setSteps(stepsData); setStepsInput(String(stepsData));
     setWeekScanned(map);
     setLoading(false);
+
+    // Mettre en cache
+    setCache({ goals: goalsData, meals: mealsData, profile: profileData, steps: stepsData, weekScanned: map });
   };
 
   useEffect(() => { load(); }, [user]);
@@ -98,7 +139,7 @@ function Dashboard() {
       { onConflict: "user_id,log_date" }
     );
     if (error) toast.error("Erreur d'enregistrement");
-    else { setSteps(n); toast.success("Pas enregistrés"); }
+    else { setSteps(n); toast.success("Pas enregistrés"); invalidateCache(); }
   };
 
   // Weight progress
@@ -286,7 +327,7 @@ function Dashboard() {
                     className={`card-premium w-full text-left overflow-hidden hover:border-gold/40 transition group btn-press animate-fade-up stagger-${Math.min(idx + 1, 6)}`}>
                     <div className="flex">
                       {m.photo_url ? (
-                        <img src={m.photo_url} alt={m.meal_name}
+                        <img src={m.photo_url} alt={m.meal_name} loading="lazy" decoding="async"
                           className="w-24 h-24 object-cover shrink-0 group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="w-24 h-24 bg-secondary shrink-0 flex items-center justify-center text-2xl">🍽️</div>
@@ -341,7 +382,7 @@ function Dashboard() {
                 style={{ maxHeight: "90dvh" }} onClick={(e) => e.stopPropagation()}>
                 <div className="relative aspect-video shrink-0">
                   {selectedMeal.photo_url
-                    ? <img src={selectedMeal.photo_url} alt={selectedMeal.meal_name} className="w-full h-full object-cover rounded-t-3xl" />
+                    ? <img src={selectedMeal.photo_url} alt={selectedMeal.meal_name} loading="lazy" decoding="async" className="w-full h-full object-cover rounded-t-3xl" />
                     : <div className="w-full h-full bg-secondary rounded-t-3xl flex items-center justify-center text-4xl">🍽️</div>}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-3xl" />
                   <button onClick={() => setSelectedMeal(null)}

@@ -191,6 +191,7 @@ function ScanPage() {
       });
       if (error) throw error;
       toast.success("Repas ajouté à ton journal ✨");
+      try { sessionStorage.removeItem("lexa_dashboard_v1"); sessionStorage.removeItem("lexa_history_v1"); } catch {}
       clearScanSession();
       navigate({ to: "/dashboard" });
     } catch (err) {
@@ -256,7 +257,7 @@ function ScanPage() {
                 {history.map((m) => (
                   <button key={m.id} onClick={() => setSelectedMeal(m)} className="shrink-0 w-20 text-left">
                     {m.photo_url
-                      ? <img src={m.photo_url} alt={m.meal_name} className="w-20 h-20 rounded-xl object-cover border border-border hover:border-gold transition" />
+                      ? <img src={m.photo_url} alt={m.meal_name} loading="lazy" decoding="async" className="w-20 h-20 rounded-xl object-cover border border-border hover:border-gold transition" />
                       : <div className="w-20 h-20 rounded-xl bg-secondary border border-border" />}
                     <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.meal_name}</p>
                     <p className="text-[10px] font-mono-data text-gold">{m.calories} kcal</p>
@@ -400,7 +401,7 @@ function ScanPage() {
                   <button key={m.id} onClick={() => setSelectedMeal(m)}
                     className="card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition">
                     {m.photo_url
-                      ? <img src={m.photo_url} alt={m.meal_name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                      ? <img src={m.photo_url} alt={m.meal_name} loading="lazy" decoding="async" className="w-12 h-12 rounded-xl object-cover shrink-0" />
                       : <div className="w-12 h-12 rounded-xl bg-secondary shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm truncate">{m.meal_name}</div>
@@ -432,7 +433,7 @@ function ScanPage() {
             {/* Photo fixe — ne scrolle pas */}
             <div className="relative aspect-video shrink-0">
               {selectedMeal.photo_url
-                ? <img src={selectedMeal.photo_url} alt={selectedMeal.meal_name} className="w-full h-full object-cover rounded-t-3xl" />
+                ? <img src={selectedMeal.photo_url} alt={selectedMeal.meal_name} loading="lazy" decoding="async" className="w-full h-full object-cover rounded-t-3xl" />
                 : <div className="w-full h-full bg-secondary rounded-t-3xl" />}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-3xl" />
               <button onClick={() => setSelectedMeal(null)}

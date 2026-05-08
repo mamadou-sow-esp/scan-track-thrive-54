@@ -38,9 +38,25 @@ function History() {
 
   const load = () => {
     if (!user) return;
+    // Cache court pour l'historique
+    const cacheKey = "lexa_history_v1";
+    try {
+      const raw = sessionStorage.getItem(cacheKey);
+      if (raw) {
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts < 30000) { setMeals(data); setLoading(false); return; }
+      }
+    } catch {}
+
     supabase.from("meals").select("*").eq("user_id", user.id)
       .order("scanned_at", { ascending: false }).limit(200)
-      .then(({ data }) => { if (data) setMeals(data as Meal[]); setLoading(false); });
+      .then(({ data }) => {
+        if (data) {
+          setMeals(data as Meal[]);
+          try { sessionStorage.setItem(cacheKey, JSON.stringify({ data, ts: Date.now() })); } catch {}
+        }
+        setLoading(false);
+      });
   };
 
   useEffect(() => { load(); }, [user]);
@@ -49,7 +65,11 @@ function History() {
     setDeleting(true);
     const { error } = await supabase.from("meals").delete().eq("id", id);
     if (error) toast.error("Erreur lors de la suppression");
-    else { toast.success("Repas supprimé"); setSelected(null); load(); }
+    else {
+      toast.success("Repas supprimé");
+      try { sessionStorage.removeItem("lexa_history_v1"); sessionStorage.removeItem("lexa_dashboard_v1"); } catch {}
+      setSelected(null); load();
+    }
     setDeleting(false);
   };
 
@@ -84,7 +104,7 @@ function History() {
                   <button key={m.id} onClick={() => setSelected(m)}
                     className={`card-premium p-3 flex items-center gap-3 w-full text-left hover:border-gold/40 transition btn-press animate-fade-up stagger-${Math.min(idx + 1, 6)}`}>
                     {m.photo_url
-                      ? <img src={m.photo_url} alt={m.meal_name} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                      ? <img src={m.photo_url} alt={m.meal_name} loading="lazy" decoding="async" className="w-14 h-14 rounded-xl object-cover shrink-0" />
                       : <div className="w-14 h-14 rounded-xl bg-secondary shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold truncate">{m.meal_name}</div>
@@ -126,7 +146,7 @@ function History() {
             {/* Photo header — fixe, ne scrolle pas */}
             <div className="relative aspect-video shrink-0">
               {selected.photo_url
-                ? <img src={selected.photo_url} alt={selected.meal_name} className="w-full h-full object-cover rounded-t-3xl" />
+                ? <img src={selected.photo_url} alt={selected.meal_name} loading="lazy" decoding="async" className="w-full h-full object-cover rounded-t-3xl" />
                 : <div className="w-full h-full bg-secondary rounded-t-3xl" />}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-t-3xl" />
               <button onClick={() => setSelected(null)}
