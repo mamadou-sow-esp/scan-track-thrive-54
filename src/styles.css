@@ -279,7 +279,10 @@
   }
 }
 
-/* GPU acceleration sur les éléments animés */
+/* Safe area iOS */
+.safe-area-pb {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
 .animate-fade-up, .animate-spring-up, .animate-spring-scale,
 .animate-slide-down, .animate-scale-in, .animate-count-up {
   will-change: transform, opacity;
