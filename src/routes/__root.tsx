@@ -140,7 +140,7 @@ function RootComponent() {
 function PageTransition({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   return (
-    <div key={location.pathname} style={{ animation: "fade-up 0.35s cubic-bezier(.22,.68,0,1.2) both" }}>
+    <div key={location.pathname} className="animate-fade-in">
       {children}
     </div>
   );

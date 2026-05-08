@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const backRoute = BACK_ROUTES[location.pathname];
 
   return (
-    <div className="min-h-screen max-w-md mx-auto" style={{ paddingBottom: "5rem" }}>
+    <div className="min-h-screen max-w-md mx-auto" style={{ paddingBottom: "80px" }}>
       {backRoute && (
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50 animate-slide-down">
           <div className="max-w-md mx-auto flex items-center px-4 py-3 gap-2">
@@ -51,8 +51,18 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {children}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border">
-        <div className="max-w-md mx-auto flex items-center justify-around px-2 py-3 safe-area-pb">
+      <nav style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        transform: "translateZ(0)",
+        WebkitTransform: "translateZ(0)",
+        backgroundColor: "var(--background)",
+        borderTop: "1px solid var(--border)",
+      }}>
+        <div className="max-w-md mx-auto flex items-center justify-around px-2 py-3">
           {tabs.map((t) => {
             const active = location.pathname === t.to;
             return (
