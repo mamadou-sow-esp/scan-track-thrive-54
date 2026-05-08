@@ -4,7 +4,6 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -128,20 +127,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <PageTransition>
-          <Outlet />
-        </PageTransition>
+        <Outlet />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
-  );
-}
-
-function PageTransition({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
-  return (
-    <div key={location.pathname} className="animate-fade-in">
-      {children}
-    </div>
   );
 }
