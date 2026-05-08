@@ -139,7 +139,7 @@ function History() {
           style={{ touchAction: "none" }}
         >
           <div
-            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-spring-up flex flex-col"
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal-up flex flex-col"
             style={{ maxHeight: "90dvh" }}
             onClick={(e) => e.stopPropagation()}
           >

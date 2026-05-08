@@ -354,7 +354,7 @@ function ScanPage() {
               { label: "Glucides", value: result.carbs, color: "var(--carb)" },
               { label: "Lipides", value: result.fats, color: "var(--fat)" },
             ].map((m, i) => (
-              <div key={m.label} className={`card-premium p-4 text-center animate-spring-scale stagger-${i + 1}`}>
+              <div key={m.label} className={`card-premium p-4 text-center  stagger-${i + 1}`}>
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{m.label}</div>
                 <div className="text-xl font-semibold" style={{ color: m.color }}>
                   {Math.round(m.value)}<span className="text-xs">g</span>
@@ -426,7 +426,7 @@ function ScanPage() {
           style={{ touchAction: "none" }}
         >
           <div
-            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-spring-up flex flex-col"
+            className="w-full max-w-md bg-card border border-border rounded-t-3xl animate-modal-up flex flex-col"
             style={{ maxHeight: "90dvh" }}
             onClick={(e) => e.stopPropagation()}
           >

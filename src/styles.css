@@ -3,7 +3,6 @@
 @import "tw-animate-css";
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -37,9 +36,9 @@
   --color-success: var(--success);
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 :root {
@@ -135,12 +134,15 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.03em;
-    font-weight: 700;
+    letter-spacing: -0.025em;
+    font-weight: 600;
   }
 }
 
@@ -171,107 +173,45 @@
   }
 }
 
-@keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slide-up { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slide-down { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
-@keyframes slide-in-right { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
-@keyframes scale-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
-@keyframes spring-up {
-  0%   { opacity: 0; transform: translateY(100%) scale(0.96); }
-  60%  { opacity: 1; transform: translateY(-6px) scale(1.01); }
-  80%  { transform: translateY(3px) scale(0.995); }
-  100% { transform: translateY(0) scale(1); }
-}
-@keyframes spring-scale {
-  0%   { transform: scale(0.88); opacity: 0; }
-  60%  { transform: scale(1.04); opacity: 1; }
-  80%  { transform: scale(0.98); }
-  100% { transform: scale(1); }
-}
-@keyframes count-up { from { opacity: 0; transform: translateY(8px) scale(0.95); } to { opacity: 1; transform: none; } }
-@keyframes bar-fill { from { width: 0%; } to { width: var(--bar-w, 100%); } }
-@keyframes stagger-in {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: none; }
-}
-@keyframes ripple {
-  0%   { transform: scale(0); opacity: 0.5; }
-  100% { transform: scale(4); opacity: 0; }
-}
-@keyframes pulse-gold { 0%,100% { box-shadow: 0 0 0 0 oklch(0.74 0.12 85 / 0.4); } 50% { box-shadow: 0 0 0 12px oklch(0.74 0.12 85 / 0); } }
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
-}
-@keyframes scan-line {
-  0%   { top: 0%; }
-  50%  { top: 100%; }
-  100% { top: 0%; }
-}
-@keyframes particle-burst {
-  0%   { transform: translate(0,0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--px, 20px), var(--py, -30px)) scale(0); opacity: 0; }
-}
+/* ── ANIMATIONS ─────────────────────────────────────────────────────────────
+   Philosophie : subtiles, rapides, jamais de bounce excessif.
+   Seules 3 animations d'entrée + modal + transitions UI.
+   Aucune animation infinie sauf le shimmer de loading.
+────────────────────────────────────────────────────────────────────────── */
 
-/* Utilitaires */
-.animate-fade-up      { animation: fade-up 0.45s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-fade-in      { animation: fade-in 0.3s ease both; }
-.animate-slide-up     { animation: slide-up 0.4s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-slide-down   { animation: slide-down 0.35s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-slide-right  { animation: slide-in-right 0.35s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-scale-in     { animation: scale-in 0.35s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-spring-up    { animation: spring-up 0.55s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-spring-scale { animation: spring-scale 0.45s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-count-up     { animation: count-up 0.5s cubic-bezier(.22,.68,0,1.2) both; }
-.animate-pulse-gold   { animation: pulse-gold 2s ease-out infinite; }
-.animate-float        { animation: float 3s ease-in-out infinite; }
-.animate-shimmer {
+/* Keyframes */
+@keyframes fade-in   { from { opacity: 0; }                          to { opacity: 1; } }
+@keyframes fade-up   { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes modal-up  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes shimmer   { from { background-position: -200% 0; }        to { background-position: 200% 0; } }
+@keyframes bar-grow  { from { width: 0; }                            to { width: var(--w, 100%); } }
+
+/* Classes utilitaires */
+.animate-fade-in  { animation: fade-in  0.2s ease both; }
+.animate-fade-up  { animation: fade-up  0.25s ease both; }
+.animate-modal-up { animation: modal-up 0.25s ease both; }
+.animate-shimmer  {
   background: linear-gradient(90deg, var(--secondary) 25%, var(--border) 50%, var(--secondary) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer 1.4s ease infinite;
 }
 
-/* Stagger helpers */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.10s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.20s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.30s; }
-
-/* Press effect sur les boutons interactifs */
+/* Tap effect */
 .btn-press {
-  transition: transform 0.12s ease, opacity 0.12s ease;
   -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.1s ease;
 }
-.btn-press:active { transform: scale(0.95); opacity: 0.85; }
+.btn-press:active { opacity: 0.7; }
 
-/* Page transition wrapper */
-.page-enter {
-  animation: fade-up 0.4s cubic-bezier(.22,.68,0,1.2) both;
-}
+/* Transitions CSS globales pour les éléments interactifs */
+a, button { transition: opacity 0.15s ease, color 0.15s ease; }
 
-/* Désactiver les animations continues coûteuses - performances mobile */
-.animate-pulse-gold { animation: none; box-shadow: var(--shadow-gold); }
-.animate-float { animation: none; }
-.animate-shimmer {
-  background: var(--secondary);
-  animation: shimmer 2s infinite;
-  will-change: background-position;
+/* Barres de progression animées */
+.bar-animated {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Activer les animations continues seulement sur desktop performant */
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  .animate-pulse-gold { animation: pulse-gold 2s ease-out infinite; }
-  .animate-float { animation: float 3s ease-in-out infinite; }
-}
-
-/* Désactiver toutes les animations si l'utilisateur le préfère */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -282,8 +222,4 @@
 /* Safe area iOS */
 .safe-area-pb {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-}
-.animate-fade-up, .animate-spring-up, .animate-spring-scale,
-.animate-slide-down, .animate-scale-in, .animate-count-up {
-  will-change: transform, opacity;
 }

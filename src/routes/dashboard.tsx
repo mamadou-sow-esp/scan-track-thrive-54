@@ -169,7 +169,7 @@ function Dashboard() {
   return (
     <div className="px-5 pt-8 space-y-6">
       {/* Header animé */}
-      <header className="flex items-center justify-between animate-slide-down">
+      <header className="flex items-center justify-between ">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Aujourd'hui</p>
           <h1 className="font-display text-3xl font-semibold mt-1">Bonjour{profile?.name ? `, ${profile.name}` : ""}</h1>
@@ -218,7 +218,7 @@ function Dashboard() {
       ) : (
         <>
           {/* Calories */}
-          <div className="card-premium p-6 animate-fade-up stagger-1">
+          <div className="card-premium p-6 animate-fade-up">
             <div className="flex items-baseline justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-gold animate-float" />
@@ -226,7 +226,7 @@ function Dashboard() {
               </div>
               <span className="text-xs text-muted-foreground">{totals.cal} / {calGoal} kcal</span>
             </div>
-            <div className="font-display text-5xl font-semibold text-gold mb-1 animate-count-up">
+            <div className="font-display text-5xl font-semibold text-gold mb-1 ">
               {netRemaining}
               <span className="text-base text-muted-foreground font-sans ml-2">restantes</span>
             </div>
@@ -237,7 +237,7 @@ function Dashboard() {
               <div className="h-full bg-gold rounded-full"
                 style={{
                   width: `${calPct}%`,
-                  transition: "width 1.2s cubic-bezier(.22,.68,0,1.2)",
+                  transition: "width 0.8s ease",
                 }} />
             </div>
           </div>
@@ -250,7 +250,7 @@ function Dashboard() {
           </div>
 
           {/* Steps donut + saisie */}
-          <div className="card-premium p-5 animate-fade-up stagger-3">
+          <div className="card-premium p-5 animate-fade-up">
             <div className="flex items-center gap-2 mb-4">
               <Footprints className="w-4 h-4 text-gold" />
               <span className="text-sm text-muted-foreground">Activité du jour</span>
@@ -262,7 +262,7 @@ function Dashboard() {
                   <circle cx="50" cy="50" r={r} fill="none" stroke="var(--secondary)" strokeWidth="10" />
                   <circle cx="50" cy="50" r={r} fill="none" stroke="#C9A84C" strokeWidth="10"
                     strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
-                    style={{ transition: "stroke-dasharray 1.2s cubic-bezier(.22,.68,0,1.2)" }} />
+                    style={{ transition: "stroke-dasharray 0.8s ease" }} />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-sm font-semibold text-gold">{steps.toLocaleString("fr-FR")}</span>
@@ -315,7 +315,7 @@ function Dashboard() {
               )}
             </div>
             {meals.length === 0 ? (
-              <div className="card-premium p-8 text-center space-y-2 animate-scale-in">
+              <div className="card-premium p-8 text-center space-y-2 ">
                 <div className="text-3xl animate-float">🍽️</div>
                 <p className="text-muted-foreground text-sm">Aucun repas scanné aujourd'hui.</p>
                 <p className="text-xs text-muted-foreground">Scanner ton premier repas pour commencer !</p>
@@ -452,7 +452,7 @@ function MacroCard({ label, value, goal, color, delay = "0s" }: { label: string;
   return (
     <div className="card-premium p-4 animate-fade-up" style={{ animationDelay: delay }}>
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{label}</div>
-      <div className="text-xl font-semibold animate-count-up" style={{ animationDelay: delay }}>
+      <div className="text-xl font-semibold " style={{ animationDelay: delay }}>
         {Math.round(value)}<span className="text-xs text-muted-foreground">g</span>
       </div>
       <div className="h-1 rounded-full bg-secondary overflow-hidden mt-3">
@@ -460,7 +460,7 @@ function MacroCard({ label, value, goal, color, delay = "0s" }: { label: string;
           style={{
             width: `${pct}%`,
             backgroundColor: color,
-            transition: "width 1.2s cubic-bezier(.22,.68,0,1.2)",
+            transition: "width 0.8s ease",
             transitionDelay: delay,
           }} />
       </div>
