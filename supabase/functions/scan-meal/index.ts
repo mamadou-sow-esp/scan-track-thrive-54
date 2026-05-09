@@ -29,11 +29,19 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { image } = await req.json();
+    const { image, mode, cal_goal, goal_label } = await req.json();
     if (!image) throw new Error("Image manquante");
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY non configurée");
+
+    const isFridge = mode === "fridge";
+    const systemPrompt = isFridge
+      ? fridgeSystem(Number(cal_goal) || 2000, String(goal_label || "maintien"))
+      : MEAL_SYSTEM;
+    const userText = isFridge
+      ? "Analyse ce frigo et retourne le JSON."
+      : "Analyse ce plat et retourne le JSON.";
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
