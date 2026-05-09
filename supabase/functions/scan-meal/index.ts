@@ -52,11 +52,11 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
-              { type: "text", text: "Analyse ce plat et retourne le JSON." },
+              { type: "text", text: userText },
               { type: "image_url", image_url: { url: image } },
             ],
           },
