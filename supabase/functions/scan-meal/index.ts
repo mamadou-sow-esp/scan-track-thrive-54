@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM = `Tu es Lexa, un nutritionniste IA expert. Analyse la photo de plat fournie.
+const MEAL_SYSTEM = `Tu es Lexa, un nutritionniste IA expert. Analyse la photo de plat fournie.
 Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte additionnel, exactement avec cette structure :
 {
   "meal_name": "Nom du plat",
@@ -22,15 +22,26 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte additio
 }
 Confidence doit être "high", "medium" ou "low". Sois précis. Si ce n'est pas un plat, retourne meal_name: "Inconnu" et calories: 0.`;
 
+const fridgeSystem = (cal_goal: number, goal_label: string) =>
+  `Tu es Lexa, chef nutritionniste IA. Analyse ce frigo. Objectif: ${cal_goal} kcal/jour pour ${goal_label}. Réponds UNIQUEMENT en JSON valide : {detected_ingredients:[...], recipes:[{name, ingredients_used, calories_estimate, proteins, carbs, fats, prep_time, difficulty, instructions, fits_goal}], missing_basics:[...], goal_context:...} Propose 3 recettes.`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { image } = await req.json();
+    const { image, mode, cal_goal, goal_label } = await req.json();
     if (!image) throw new Error("Image manquante");
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY non configurée");
+
+    const isFridge = mode === "fridge";
+    const systemPrompt = isFridge
+      ? fridgeSystem(Number(cal_goal) || 2000, String(goal_label || "maintien"))
+      : MEAL_SYSTEM;
+    const userText = isFridge
+      ? "Analyse ce frigo et retourne le JSON."
+      : "Analyse ce plat et retourne le JSON.";
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -41,11 +52,11 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
-              { type: "text", text: "Analyse ce plat et retourne le JSON." },
+              { type: "text", text: userText },
               { type: "image_url", image_url: { url: image } },
             ],
           },
