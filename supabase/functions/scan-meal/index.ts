@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM = `Tu es Lexa, un nutritionniste IA expert. Analyse la photo de plat fournie.
+const MEAL_SYSTEM = `Tu es Lexa, un nutritionniste IA expert. Analyse la photo de plat fournie.
 Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte additionnel, exactement avec cette structure :
 {
   "meal_name": "Nom du plat",
@@ -21,6 +21,9 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte additio
   "notes": "Note courte"
 }
 Confidence doit être "high", "medium" ou "low". Sois précis. Si ce n'est pas un plat, retourne meal_name: "Inconnu" et calories: 0.`;
+
+const fridgeSystem = (cal_goal: number, goal_label: string) =>
+  `Tu es Lexa, chef nutritionniste IA. Analyse ce frigo. Objectif: ${cal_goal} kcal/jour pour ${goal_label}. Réponds UNIQUEMENT en JSON valide : {detected_ingredients:[...], recipes:[{name, ingredients_used, calories_estimate, proteins, carbs, fats, prep_time, difficulty, instructions, fits_goal}], missing_basics:[...], goal_context:...} Propose 3 recettes.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
